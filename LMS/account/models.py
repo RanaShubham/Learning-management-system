@@ -21,7 +21,7 @@ class UserManager(BaseUserManager):
             raise LMSException(ExceptionType.UserException, "User must have a password.")
 
         user_obj = self.model(
-            email = self.normalize_email(email),
+            email=self.normalize_email(email),
         )
 
         user_obj.set_password(password)
