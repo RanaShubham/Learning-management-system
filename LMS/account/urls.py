@@ -1,12 +1,13 @@
-from .views import GetUser, LoginUser, RegisterUser, UpdateUser
+from .views import LoginUser, RegisterUser
 from django.conf import settings
 from django.urls.conf import path
 
 app_name = "account"
 
 urlpatterns = [
-    path('', GetUser.as_view(), name="get_users"),
-    path('register', RegisterUser.as_view(), name="regsiter_user"),
+    path('', RegisterUser.as_view(), name="get_user"),
     path('login', LoginUser.as_view(), name="login_user"),
-    path('update/<int>', UpdateUser.as_view(), name="update_user"),
+    path('logout', LoginUser.as_view(), name="logout_user"),
+    path('patch/<int:pk>', RegisterUser.as_view(), name="login_user"),
+    path('register', RegisterUser.as_view(), name="register_user"),
 ]

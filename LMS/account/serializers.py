@@ -1,31 +1,24 @@
+from django.contrib import auth
+from .models import User
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
-from .models import User
-from django.contrib import auth
+
+
+
 
 class RegisterSerializer(ModelSerializer):
-    # password = serializers.CharField(
-    #     max_length=68, min_length=6, write_only=True)
 
-    # default_error_messages = {
-    #     'username': 'The username should only contain alphanumeric characters'}
 
     class Meta:
         model = User
-        fields = ['email', 'name', 'role','phone_number',]#'password'
+        fields = ['id','email', 'name', 'role','phone_number',]
 
-    # def validate(self, attrs):
-    #     email = attrs.get('email', '')
-    #     user_name = attrs.get('user_name', '')
-
-    #     if not user_name.isalnum():
-    #         raise serializers.ValidationError(
-    #             self.default_error_messages)
-    #     return attrs
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)
+
+
 
 
 class LoginSerializer(ModelSerializer):
@@ -38,12 +31,9 @@ class LoginSerializer(ModelSerializer):
     Returns:
         [string]: [email]
     """
-
-
-
     email = serializers.EmailField(max_length=255, min_length=3)
     password = serializers.CharField(
-        max_length=68, min_length=3, write_only=True)
+        max_length=68, min_length=6, write_only=True)
 
     class Meta:
         model = User
@@ -56,12 +46,7 @@ class LoginSerializer(ModelSerializer):
         """
         email = attrs.get('email', '')
         password = attrs.get('password', '')
-
-        print(password)
         user = auth.authenticate(email=email, password=password)
-        print(user.email)
-        print(user.password)
-
         if not user:
             raise AuthenticationFailed('Invalid credentials, please try again')
         if not user.is_active:

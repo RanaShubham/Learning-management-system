@@ -69,7 +69,7 @@ TEMPLATES = [
     },
 ]
 
-#AUTH_USER_MODEL = 'account.User'
+AUTH_USER_MODEL = 'account.User'
 
 
 WSGI_APPLICATION = 'LMS.wsgi.application'

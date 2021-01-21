@@ -2,6 +2,7 @@ import enum
 
 class ExceptionType(enum.Enum):
     UserException = "Cannot create user instance."
+    NonExistentError = "Requested user does not exist"
 
 class LMSException(Exception):
     """[Custom exception.]

@@ -1,17 +1,32 @@
-from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from LMS.utils import ExceptionType, LMSException
-from .utils import Util, get_random_password
+
 
 class UserManager(BaseUserManager):
-    
-    def create_user(self, email, password='password', is_active=True, name=None, role=None, phone_number=None):
-        '''
-            Method to create a user record for the database.
-            Throws vlaue error if no email is provided.
-            Throws value error if no password is provided.
-        '''
+
+    def create_superuser(self, name, email, phone_number,password,role, **other_fields):
+        """
+        takes details of the user as input and if all details are valid then it will create superuser profile
+        """
+        other_fields.setdefault('is_staff', True)
+        other_fields.setdefault('is_superuser', True)
+        other_fields.setdefault('is_active', True)
+
+        if other_fields.get('is_staff') is not True:
+           raise LMSException(ExceptionType.UserException,
+               'Superuser must be assigned to is_staff=True.')
+        if other_fields.get('is_superuser') is not True:
+            raise LMSException(ExceptionType.UserException,
+                'Superuser must be assigned to is_superuser=True.')
+
+        return self.create_user(name=name, email=email,role=role,
+                                password=password,phone_number=phone_number, **other_fields)
+
+    def create_user(self, email, name, role,phone_number,password='password', **other_fields):
+        """
+        takes details of the user as input and if all credentials are valid then it will create user
+        """
         if not name:
             raise LMSException(ExceptionType, "User must have a name.")
         if not role:
@@ -23,31 +38,33 @@ class UserManager(BaseUserManager):
         if not phone_number:
             raise LMSException(ExceptionType.UserException, "User must have a phone number")
 
-        user_obj = self.model(
-            email = self.normalize_email(email),
-        )
-        
-        #user_obj.password = password
-        user_obj.name = name
-        user_obj.role = role
-        user_obj.phone_number= phone_number
-        user_obj.set_password(password)
-        user_obj.is_active = is_active
-        user_obj.save(using=self.db)
-        return user_obj
+        email = self.normalize_email(email)
+        user = self.model(name=name,  email=email,role = role,phone_number=phone_number,
+                          password=password, **other_fields)
+
+        user.name = name
+        user.role = role
+        user.phone_number = phone_number
+        user.is_active = True
+        user.set_password(password)
+        user.save()
+        return user
 
 
-class User(AbstractBaseUser):
+class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=128, unique=True)
     name = models.CharField(max_length=32, blank=False, null=False)
     phone_number = models.CharField(max_length=10, blank=False, null=False)
     role = models.CharField(max_length=16, null=False, blank=False)
     is_deleted = models.BooleanField(default=False)
-    is_active= models.BooleanField(default=False)
+    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False)
+
+    objects = UserManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
-    objects = UserManager()
+    REQUIRED_FIELDS = ['name','role','phone_number']
 
     def __str__(self):
         '''
