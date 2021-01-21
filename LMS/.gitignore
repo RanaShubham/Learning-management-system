@@ -1,6 +1,8 @@
 __pycache__
 .vscode
 userReg/
-venv/
-LMS/student/dummy_data.py
-LMS/db.sqlite3
+/db.sqlite3
+*DS_Store*
+*.idea*
+*migrations*
+
