@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .dummy_data import get_response
-from .utils import Util
+from .utils import Util, get_random_password
 from .serializers import RegisterSerializer
 from .models import *
 # from .models import UserManager
@@ -27,10 +27,16 @@ class RegisterUser(APIView):
         Returns:
             Response (json): json data if credentials are matched
         """
+        # print(request.data)
+        # request.POST._mutable = True
+        # request.data['password']=get_random_password()
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         user_data = serializer.data
+        # password2 = get_random_password()
+        # print(get_random_password())
+        # print(password2)
         user = User.objects.get(email=user_data['email'], name=user_data['name'], phone_number=user_data['phone_number'], role=user_data['role'])
         # print("aaya")
         Util.send_email(user)

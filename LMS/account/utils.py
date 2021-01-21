@@ -1,4 +1,6 @@
 import threading
+import random
+import string
 from django.core.mail import EmailMessage
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
@@ -22,3 +24,9 @@ class Util:
         email = EmailMessage(
             subject=data['email_subject'],body=data['email_body'], to=[data['to_email']])
         EmailThread(email).start()
+
+
+def get_random_password():
+    letters = string.ascii_lowercase
+    result_str = ''.join(random.choice(letters) for i in range(8))
+    print(result_str)

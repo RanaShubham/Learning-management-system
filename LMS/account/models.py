@@ -2,10 +2,10 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 from LMS.utils import ExceptionType, LMSException
-from .utils import Util
-
+from .utils import Util, get_random_password
 
 class UserManager(BaseUserManager):
+    
     def create_user(self, email, password='password', is_active=True, name=None, role=None, phone_number=None):
         '''
             Method to create a user record for the database.
@@ -26,7 +26,8 @@ class UserManager(BaseUserManager):
         user_obj = self.model(
             email = self.normalize_email(email),
         )
-        # user_obj.password = 'password'
+        
+        user_obj.password = password
         user_obj.name = name
         user_obj.role = role
         user_obj.phone_number= phone_number
@@ -42,6 +43,7 @@ class User(AbstractBaseUser):
     phone_number = models.CharField(max_length=10, blank=False, null=False)
     role = models.CharField(max_length=16, null=False, blank=False)
     is_deleted = models.BooleanField(default=False)
+    is_active= models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
