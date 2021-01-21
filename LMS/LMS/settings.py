@@ -69,7 +69,15 @@ TEMPLATES = [
     },
 ]
 
+#AUTH_USER_MODEL = 'account.User'
+
+
 WSGI_APPLICATION = 'LMS.wsgi.application'
+
+#Authentication backends
+AUTHENTICATION_BACKENDS = (
+        'django.contrib.auth.backends.ModelBackend',
+    )
 
 
 # Database

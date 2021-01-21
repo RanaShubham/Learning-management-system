@@ -15,7 +15,7 @@ import datetime
 # Create your views here.
 class GetUser(APIView):
     def get(self , request, **kwargs):
-        user=User.objects.filter(email='asdfgh@gmail.com').first()
+        user=User.objects.filter(email='admin6@gmail.com').first()
         return Response({'status':True, "message":user}, status=status.HTTP_200_OK)
 
 class RegisterUser(APIView):

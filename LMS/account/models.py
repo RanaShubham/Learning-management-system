@@ -27,7 +27,7 @@ class UserManager(BaseUserManager):
             email = self.normalize_email(email),
         )
         
-        user_obj.password = password
+        #user_obj.password = password
         user_obj.name = name
         user_obj.role = role
         user_obj.phone_number= phone_number
