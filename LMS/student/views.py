@@ -18,7 +18,7 @@ class StudentDetails(APIView):
                         @type:str
                         college: college the student admitted
                         @type:str
-                        git_link: lgit link of the student
+                        git_link: git link of the student
                         @type:str
 
         @return: status, message and status code
@@ -36,9 +36,9 @@ class StudentDetails(APIView):
             return Response(self.data, status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             self.data['exception'] = str(e)
-            return Response(self.data, status.HTTP_201_CREATED)
+            return Response(self.data, status.HTTP_400_BAD_REQUEST)
 
-    def get(self, **kwargs):
+    def get(self, request, **kwargs):
         """
         [displays specific student data ]
         args: kwargs[pk]: user id of the user
