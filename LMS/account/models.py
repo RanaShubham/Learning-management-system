@@ -2,10 +2,11 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 from LMS.utils import ExceptionType, LMSException
+from .utils import Util
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, password, is_active=True, name=None, role=None):
+    def create_user(self, email, password='password', is_active=True, name=None, role=None, phone_number=None):
         '''
             Method to create a user record for the database.
             Throws vlaue error if no email is provided.
@@ -19,11 +20,16 @@ class UserManager(BaseUserManager):
             raise LMSException(ExceptionType.UserException, "User must have an email.")
         if not password:
             raise LMSException(ExceptionType.UserException, "User must have a password.")
+        if not phone_number:
+            raise LMSException(ExceptionType.UserException, "User must have a phone number")
 
         user_obj = self.model(
             email = self.normalize_email(email),
         )
-
+        # user_obj.password = 'password'
+        user_obj.name = name
+        user_obj.role = role
+        user_obj.phone_number= phone_number
         user_obj.set_password(password)
         user_obj.is_active = is_active
         user_obj.save(using=self.db)
