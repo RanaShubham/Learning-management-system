@@ -18,7 +18,10 @@ class Util:
     @staticmethod
     def send_email(user):
         # if flag is not None:
-        email_body = 'Hi '+user.name + ' Use the credentials below to login and fill in your details \n' + 'Email:'+user.email+ '\nPassword: password'+'\nThank you,\nTeam LMS'
+        password = ''.join(store())
+
+        print(password)
+        email_body = 'Hi '+user.name + '\nUse the credentials below to login and fill in your details \n' + 'Email:'+user.email+ '\nPassword:'+ password+'\nThank you,\nTeam LMS'
         data = {'email_body': email_body, 'to_email': user.email,
                 'email_subject': 'Login Credentials for LMS'}
         email = EmailMessage(
@@ -27,6 +30,11 @@ class Util:
 
 
 def get_random_password():
-    letters = string.ascii_lowercase
-    result_str = ''.join(random.choice(letters) for i in range(8))
-    print(result_str)
+    letters = string.ascii_letters + string.digits
+    result_str = ''.join(random.choice(letters) for i in range(10))
+    return result_str
+
+def store(*values):
+    store.values = values or store.values
+    return store.values
+store.values = ()
