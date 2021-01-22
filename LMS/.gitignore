@@ -6,3 +6,4 @@ userReg/
 *.idea*
 *migrations*
 .env
+/account/migrations/
