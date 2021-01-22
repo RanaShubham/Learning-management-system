@@ -18,16 +18,34 @@ class RegisterUser(APIView):
 
     @method_decorator(user_login_required, name='dispatch')
     def get(self, request,**kwargs):
-        users = User.objects.all()
-        print(users)
-        serializer = RegisterSerializer(users,many=True)
-        response = {'status': True,
-                    'message': 'Retrieved all users.','data':serializer.data}
-        return Response(response, status=status.HTTP_200_OK)
+        """[To get all the registered account details when logged in as admin.]
+
+        Args:
+            request ([type]): [description]
+            kwargs: ([int]): Integer id of the user who made the request.
+        Returns:
+            [Response]: [Response with status of success and data if successful.]
+        """
+        current_user_id = kwargs.get('userid')
+        try:
+            requesting_user  = User.objects.get(id=current_user_id)
+            if requesting_user.role == 'admin':
+                users = User.objects.all()
+                serializer = RegisterSerializer(users, many=True)
+                response = {'status': True,
+                            'message': 'Retrieved all users.','data':serializer.data}
+                return Response(response, status=status.HTTP_200_OK)
+            else:
+                response = {'status': False, 'message': 'Not accessible.'}
+                return Response(response, status=status.HTTP_401_UNAUTHORIZED)
+        except User.DoesNotExist:
+            response = {'status': False, 'message': 'Please login again.'}
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+        except Exception:
+            response = {'status':False, 'message':'Somethign went wrong.'}
+            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def post(self, request, **kwargs):
-        # TODO: ADD USER IN DB HERE.
-
         """
         create account for user by taking in user details
 
@@ -43,7 +61,6 @@ class RegisterUser(APIView):
         user_data = serializer.data
         user = User.objects.get(email=user_data['email'], name=user_data['name'],
                                 phone_number=user_data['phone_number'], role=user_data['role'])
-        print(user)
         Util.send_email(user)
         response = {'status': True,
                     'message': 'Registered successfully. Login Crdentials have been sent to your email.'}
@@ -67,9 +84,7 @@ class RegisterUser(APIView):
 
 class LoginUser(APIView):
 
-
     def post(self, request, **kwargs):
-        #TODO: Logging.
         try:
 
             serializer = LoginSerializer(data=request.data)
@@ -89,7 +104,7 @@ class LoginUser(APIView):
             result = {'status': False, 'message': 'Invalid credentials'}
             return Response(result, status.HTTP_401_UNAUTHORIZED, content_type="application/json")
         except Exception as e:
-            result = {'status': False, 'message': 'Some other issue.Please try again'}
+            result = {'status': False, 'message': str(e)}
             return Response(result, status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
     @method_decorator(user_login_required, name='dispatch')

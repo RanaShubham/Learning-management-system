@@ -1,8 +1,8 @@
 __pycache__
-.vscode
+*.vscode*
 userReg/
 /db.sqlite3
 *DS_Store*
 *.idea*
 *migrations*
-
+.env
