@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from LMS.utils import ExceptionType, LMSException
+from .utils import store, get_random_password
 
 
 class UserManager(BaseUserManager):
@@ -23,7 +24,7 @@ class UserManager(BaseUserManager):
         return self.create_user(name=name, email=email,role=role,
                                 password=password,phone_number=phone_number, **other_fields)
 
-    def create_user(self, email, name, role,phone_number,password='password', **other_fields):
+    def create_user(self, email, name, role,phone_number,password=get_random_password(), **other_fields):
         """
         takes details of the user as input and if all credentials are valid then it will create user
         """
@@ -41,7 +42,7 @@ class UserManager(BaseUserManager):
         email = self.normalize_email(email)
         user = self.model(name=name,  email=email,role = role,phone_number=phone_number,
                           password=password, **other_fields)
-
+        store(user.password)
         user.name = name
         user.role = role
         user.phone_number = phone_number
