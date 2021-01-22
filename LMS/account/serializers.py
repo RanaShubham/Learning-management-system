@@ -4,11 +4,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
-
-
-
 class RegisterSerializer(ModelSerializer):
-
 
     class Meta:
         model = User
@@ -17,9 +13,6 @@ class RegisterSerializer(ModelSerializer):
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)
-
-
-
 
 class LoginSerializer(ModelSerializer):
     """[validates user credentials and allows login if authenticated]

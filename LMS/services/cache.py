@@ -6,7 +6,6 @@ class Cache:
     """
     Instantiates cache object and returns same instance for further operations using getInstance()
     """
-
     __shared_instance = None
 
     @staticmethod
