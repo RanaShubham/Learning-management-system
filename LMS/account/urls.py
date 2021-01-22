@@ -1,13 +1,11 @@
 from .views import LoginUser, RegisterUser
 from django.conf import settings
-from django.urls.conf import path
+from django.urls.conf import path, re_path
 
 app_name = "account"
 
 urlpatterns = [
-    path('', RegisterUser.as_view(), name="get_user"),
+    re_path(r'^(?P<pk>[0-9]{0,})$', RegisterUser.as_view(), name="register_get_update_delete"),
     path('login', LoginUser.as_view(), name="login_user"),
     path('logout', LoginUser.as_view(), name="logout_user"),
-    path('patch/<int:pk>', RegisterUser.as_view(), name="login_user"),
-    path('register', RegisterUser.as_view(), name="register_user"),
 ]
