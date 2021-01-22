@@ -6,8 +6,6 @@ userReg/
 *.idea*
 *migrations*
 .env
-/account/migrations/
-venv/
-LMS/student/dummy_data.py
-LMS/db.sqlite3
-/htmlcov/
+*venv*
+*dummy_data.py*
+*htmlcov*
