@@ -24,9 +24,9 @@ class LoginSerializer(ModelSerializer):
     Returns:
         [string]: [email]
     """
-    email = serializers.EmailField(max_length=255, min_length=3)
+    email = serializers.EmailField(max_length=255, min_length=6)
     password = serializers.CharField(
-        max_length=68, min_length=6, write_only=True)
+        max_length=68, min_length=3, write_only=True)
 
     class Meta:
         model = User

@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from rest_framework import status
 from services.cache import Cache
 from services.encrypt import Encrypt
-#import logging
+
 
 def user_login_required(view_func):
     """[gets token and fetches user id verifying active status.
@@ -33,7 +33,7 @@ def user_login_required(view_func):
             HttpResponse.status_code = status.HTTP_400_BAD_REQUEST
             return HttpResponse(json.dumps(result), HttpResponse.status_code)
         except Exception as e:
-            result = {'status': False, 'message':str(e)}
+            result = {'status': False, 'message':'Some other issue.Please try again'}
             HttpResponse.status_code = status.HTTP_400_BAD_REQUEST
             return HttpResponse(json.dumps(result), HttpResponse.status_code)
 
