@@ -72,3 +72,8 @@ class User(AbstractBaseUser, PermissionsMixin):
             into a template when it displays an object.
         '''
         return self.email
+
+    def soft_delete(self):
+        self.is_deleted = True
+        self.save()
+

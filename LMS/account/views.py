@@ -82,6 +82,28 @@ class RegisterUser(APIView):
         return Response(response, status=status.HTTP_200_OK)
 
 
+    @method_decorator(user_login_required, name='dispatch')
+    def delete(self, request, pk, **kwargs):
+        try:
+            current_user = kwargs['userid']
+            if(User.objects.get(id=current_user).role == 'admin'):
+                if not User.objects.filter(id=pk).exists():
+                    raise LMSException(ExceptionType.NonExistentError, "Requested user does not exist")
+                else:
+                    user = User.objects.get(id=pk)
+                    user.soft_delete()
+            response = {'status': True,
+                        'message': 'Deleted successfully.'}
+            return Response(response, status=status.HTTP_200_OK)
+        except LMSException as e:
+            result = {'status': False, 'message': e.message}
+            return Response(result, status.HTTP_404_NOT_FOUND, content_type="application/json")
+        except Exception as e:
+            result = {'status': False, 'message': 'Some other issue.Please try again'}
+            return Response(result, status.HTTP_400_BAD_REQUEST, content_type="application/json")
+
+        #TODO:apply delete filter to getuser
+
 class LoginUser(APIView):
 
     def post(self, request, **kwargs):
