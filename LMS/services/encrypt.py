@@ -14,5 +14,5 @@ class Encrypt:
 
     @staticmethod
     def encode(user_id,current_time):
-        return jwt.encode({"id": user_id,"current_time":current_time}, 'secret', algorithm="HS256").decode('utf-8')
+        return jwt.encode({"id": user_id,"current_time":current_time}, 'secret', algorithm="HS256")
 

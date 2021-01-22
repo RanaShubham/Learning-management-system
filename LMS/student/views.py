@@ -3,8 +3,11 @@ from rest_framework.views import APIView
 from rest_framework import status
 from .serializers import StudentSerializer
 from .models import Student
+from django.utils.decorators import method_decorator
+from account.decorators import user_login_required
 
 
+@method_decorator(user_login_required, name='dispatch')
 class StudentDetails(APIView):
     serializer_class = StudentSerializer
     data = {"status": False, "message": 'some other issue'}
