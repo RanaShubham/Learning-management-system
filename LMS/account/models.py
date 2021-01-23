@@ -9,7 +9,7 @@ from .utils import store, get_random_password
 
 class UserManager(BaseUserManager):
 
-    def create_superuser(self, name, email, phone_number,password,role, **other_fields):
+    def create_superuser(self, name, email, phone_number,password, **other_fields):
         """
         takes details of the user as input and if all details are valid then it will create superuser profile
         """
@@ -24,7 +24,7 @@ class UserManager(BaseUserManager):
             raise LMSException(ExceptionType.UserException,
                 'Superuser must be assigned to is_superuser=True.')
 
-        return self.create_user(name=name, email=email,role=role,
+        return self.create_user(name=name, email=email,role='admin',
                                 password=password,phone_number=phone_number, **other_fields)
 
     def create_user(self, email, name, role,phone_number,password=get_random_password(), **other_fields):
@@ -68,7 +68,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['name','role','phone_number']
+    REQUIRED_FIELDS = ['name','phone_number']
 
     def __str__(self):
         '''
