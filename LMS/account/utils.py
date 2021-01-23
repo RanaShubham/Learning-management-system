@@ -28,6 +28,14 @@ class Util:
             subject=data['email_subject'],body=data['email_body'], to=[data['to_email']])
         EmailThread(email).start()
 
+    @staticmethod
+    def send_reset_email(data):
+        """[sends email on the basis of set email parameters in registration view, reset password view and check_remider method]
+        """
+        email = EmailMessage(
+            subject=data['email_subject'], body=data['email_body'], to=[data['to_email']])
+        EmailThread(email).start()
+
 
 def get_random_password():
     letters = string.ascii_letters + string.digits
