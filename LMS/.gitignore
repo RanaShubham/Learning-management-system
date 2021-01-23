@@ -4,8 +4,9 @@ userReg/
 *db.sqlite3*
 *DS_Store*
 *.idea*
-*migrations*
+*initial.py*
 .env
 *venv*
 *dummy_data.py*
 *htmlcov*
+*coverage*

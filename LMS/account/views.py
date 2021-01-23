@@ -1,5 +1,5 @@
 import datetime
-from .serializers import LoginSerializer,RegisterSerializer
+from .serializers import LoginSerializer, RegisterSerializer
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -13,11 +13,10 @@ from .utils import Util
 from LMS.utils import ExceptionType, LMSException
 
 
-
 class RegisterUser(APIView):
 
     @method_decorator(user_login_required, name='dispatch')
-    def get(self, request,**kwargs):
+    def get(self, request, **kwargs):
         """[To get all the registered account details when logged in as admin.]
 
         Args:
@@ -28,12 +27,12 @@ class RegisterUser(APIView):
         """
         current_user_id = kwargs.get('userid')
         try:
-            requesting_user  = User.objects.get(id=current_user_id)
+            requesting_user = User.objects.get(id=current_user_id)
             if requesting_user.role == 'admin':
                 users = User.objects.all()
                 serializer = RegisterSerializer(users, many=True)
                 response = {'status': True,
-                            'message': 'Retrieved all users.','data':serializer.data}
+                            'message': 'Retrieved all users.', 'data': serializer.data}
                 return Response(response, status=status.HTTP_200_OK)
             else:
                 response = {'status': False, 'message': 'Not accessible.'}
@@ -42,7 +41,7 @@ class RegisterUser(APIView):
             response = {'status': False, 'message': 'Please login again.'}
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
         except Exception:
-            response = {'status':False, 'message':'Somethign went wrong.'}
+            response = {'status': False, 'message': 'Somethign went wrong.'}
             return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def post(self, request, **kwargs):
@@ -67,7 +66,7 @@ class RegisterUser(APIView):
         return Response(response, status=status.HTTP_200_OK)
 
     @method_decorator(user_login_required, name='dispatch')
-    def patch(self,request,pk,**kwargs):
+    def patch(self, request, pk, **kwargs):
         if not User.objects.filter(id=pk).exists():
             raise LMSException(ExceptionType.NonExistentError, "Requested user does not exist")
 
@@ -78,15 +77,14 @@ class RegisterUser(APIView):
         user_data = serializer.data
         Util.send_email(user)
         response = {'status': True,
-                    'message': 'Updated successfully.','data':user_data}
+                    'message': 'Updated successfully.', 'data': user_data}
         return Response(response, status=status.HTTP_200_OK)
-
 
     @method_decorator(user_login_required, name='dispatch')
     def delete(self, request, pk, **kwargs):
         try:
             current_user = kwargs['userid']
-            if(User.objects.get(id=current_user).role == 'admin'):
+            if (User.objects.get(id=current_user).role == 'admin'):
                 if not User.objects.filter(id=pk).exists():
                     raise LMSException(ExceptionType.NonExistentError, "Requested user does not exist")
                 else:
@@ -102,7 +100,8 @@ class RegisterUser(APIView):
             result = {'status': False, 'message': 'Some other issue.Please try again'}
             return Response(result, status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
-        #TODO:apply delete filter to getuser
+        # TODO:apply delete filter to getuser
+
 
 class LoginUser(APIView):
 
@@ -115,7 +114,7 @@ class LoginUser(APIView):
             current_time = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
             token = Encrypt.encode(user.id, current_time)
             Cache.getInstance().set("TOKEN_" + str(user.id) + "_AUTH", token)
-            result = {'status':True, 'message':'Token generated.Login successful.'}
+            result = {'status': True, 'message': 'Token generated.Login successful.'}
             response = Response(result, status=status.HTTP_200_OK, content_type="application/json")
             response.__setitem__(header="HTTP_AUTHORIZATION", value=token)
             return response
@@ -143,22 +142,9 @@ class LoginUser(APIView):
             if cache.get("TOKEN_" + str(current_user) + "_AUTH"):
                 cache.delete("TOKEN_" + str(current_user) + "_AUTH")
 
-            result={'status':True, 'message':'Logged out'}
+            result = {'status': True, 'message': 'Logged out'}
 
             return Response(result, status=status.HTTP_200_OK, content_type="application/json")
         except Exception as e:
             result = {'status': True, 'message': 'some other issue.Please try again'}
             return Response(result, status.HTTP_400_BAD_REQUEST, content_type="application/json")
-
-
-
-
-
-
-
-
-
-
-
-
-

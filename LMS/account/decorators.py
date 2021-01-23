@@ -17,7 +17,7 @@ def user_login_required(view_func):
             token = request.META['HTTP_AUTHORIZATION']
             decoded_token = Encrypt.decode(token)
             cache_key = Cache.getInstance().get("TOKEN_"+str(decoded_token['id'])+"_AUTH")
-            if cache_key.decode("utf-8") == token:
+            if cache_key is not None and cache_key.decode("utf-8") == token:
                 kwargs['userid'] = decoded_token['id']
                 return view_func(request, *args , **kwargs)
             else:

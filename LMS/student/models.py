@@ -1,9 +1,10 @@
 from django.db import models
+from account.models import User
 
 
 class Student(models.Model):
-    name = models.CharField(max_length=50, blank=True, null=False)
-    phone_number = models.CharField(max_length=13, blank=False, null=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='author', null=True)  # name of user
+    email = models.CharField(max_length=30)
     alternate_contact_number = models.CharField(max_length=13, blank=False, null=False)
     relationship_of_alternate_contact_person = models.CharField(max_length=20, blank=False, null=False)
     current_location = models.CharField(max_length=20, blank=False, null=False)
@@ -22,4 +23,4 @@ class Student(models.Model):
     year_of_masters = models.IntegerField(max_length=5, blank=True, null=True)
 
     def __str__(self):
-        return self.name
+        return self.email
