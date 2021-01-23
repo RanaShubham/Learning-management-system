@@ -1,8 +1,9 @@
 import datetime
 from django.urls import reverse
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from django.utils.encoding import smart_bytes
+from django.utils.encoding import force_str, smart_bytes
 from django.utils.http import urlsafe_base64_encode
+import jwt
 from .serializers import LoginSerializer,RegisterSerializer,ResetPasswordEmailRequestSerializer,SetNewPasswordSerializer
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.views import APIView
@@ -30,7 +31,8 @@ class RegisterUser(APIView):
         try:
             current_user_id = kwargs.get('userid')
             if not (User.objects.get(id=current_user_id).role == 'admin'):
-                raise LMSException(ExceptionType.UnauthorizedError,"Sorry,you are not authorized to perform this operation.")
+                raise LMSException(ExceptionType.UnauthorizedError,"Sorry, you are not authorized\
+                     to perform this operation.")
 
             users = User.objects.filter(is_deleted=False)
             serializer = RegisterSerializer(users, many=True)
@@ -58,7 +60,8 @@ class RegisterUser(APIView):
         try:
             current_user_id = kwargs.get('userid')
             if not (User.objects.get(id=current_user_id).role == 'admin'):
-                raise LMSException(ExceptionType.UnauthorizedError,"Sorry,you are not authorized to perform this operation.")
+                raise LMSException(ExceptionType.UnauthorizedError,"Sorry,you are not authorized to perform\
+                     this operation.")
 
             serializer = RegisterSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
@@ -89,7 +92,8 @@ class RegisterUser(APIView):
         try:
             current_user_id = kwargs.get('userid')
             if not (User.objects.get(id=current_user_id).role == 'admin'):
-                raise LMSException(ExceptionType.UnauthorizedError,"Sorry,you are not authorized to perform this operation.")
+                raise LMSException(ExceptionType.UnauthorizedError,"Sorry,you are not authorized to perform\
+                     this operation.")
 
             if not User.objects.filter(id=pk).exclude(is_deleted=True).exists():
                 raise LMSException(ExceptionType.NonExistentError, "Requested user does not exist")
@@ -118,7 +122,8 @@ class RegisterUser(APIView):
         try:
             current_user_id = kwargs['userid']
             if not (User.objects.get(id=current_user_id).role == 'admin'):
-                raise LMSException(ExceptionType.UnauthorizedError, "Sorry,you are not authorized to perform this operation.")
+                raise LMSException(ExceptionType.UnauthorizedError, "Sorry,you are not authorized to perform\
+                     this operation.")
 
             if not User.objects.filter(id=pk).exclude(is_deleted=True).exists():
                 raise LMSException(ExceptionType.NonExistentError, "Requested user does not exist")
@@ -186,14 +191,6 @@ class LoginUser(APIView):
             result = {'status': True, 'message': 'some other issue.Please try again'}
             return Response(result, status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
-
-
-
-
-
-
-
-#TODO:url-> 1.send reset email 2.url slugfield(as arg) connected with another view
 class RequestPasswordResetEmail(APIView):
     """[sends an email to facilitate password reset]
     """
@@ -212,24 +209,20 @@ class RequestPasswordResetEmail(APIView):
 
             if User.objects.filter(email=email).exists():
                 user = User.objects.get(email=email)
-                uidb64 = urlsafe_base64_encode(smart_bytes(user.id))
-                token = PasswordResetTokenGenerator().make_token(user)
-                #redirect_url = request.build_absolute_uri(reverse("password-reset-complete"))
-                redirect_url = 'http://127.0.0.1:8000/users/reset-password-complete/' #TODO:try to user reverse
-
-                email_body = 'Hello, \n Your token number is : ' + token + ' \n your uidb64 code is ' + uidb64 + ' \n Use link below to reset your password  \n' + "?redirect_url=" + redirect_url
+                current_time = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+                token = force_str(Encrypt.encode(user.id, current_time))
+                Cache.getInstance().set("RESET_" + str(user.id) + "_TOKEN", token)
+                redirect_url = reverse('account:reset_password', kwargs={'reset_token':token})
+                email_body = 'Hello, please click on the link below and enter new password when asked for\n'+redirect_url
                 data = {'email_body': email_body, 'to_email': user.email,'email_subject': 'Reset your passsword'}
                 Util.send_reset_email(data)
                 result = {'status':True ,'message':'We have sent you a link to reset your password' }
                 return Response(result, status=status.HTTP_200_OK, content_type="application/json")
-
             else:
                 result = {'status': False, 'message': "Email id you have entered doesn't exist"}
                 return Response(result, status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
-
-
         except Exception as e:
-            result = {'status': False, 'message': 'Something went wrong.Please try again.'}
+            result = {'status': False, 'message': str(e)}
             return Response(result, status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
 
@@ -240,14 +233,38 @@ class SetNewPassword(APIView):
 
     def patch(self, request,**kwargs):
         """[returns new password when supplied with uid,token and new password]
-
+        
         :param request: [mandatory]:[string]: new password
         :return: confirmation message and status code
         """
+        try:
+            password = request.data.get('password')
+            token = kwargs.get('reset_token')
+            id = Encrypt.decode(token).get('id')
+            cached_reset_token = force_str(Cache.getInstance().get("RESET_" + str(id) + "_TOKEN"))
+            if not cached_reset_token or cached_reset_token == 'None':
+                raise LMSException(ExceptionType.UnauthorizedError, "reset password url is expired.")
 
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        result = {'status': True, 'message': 'Password reset successful'}
-        return Response(result, status=status.HTTP_200_OK, content_type="application/json")
+            if cached_reset_token != token:
+                raise LMSException(ExceptionType.UnauthorizedError, "reset password url is invalid.")
+            
+            if not password or len(password) <= 3:
+                raise LMSException(ExceptionType.UserException,\
+                     "Please provide a appropirate password with atleast 3 character.")
+
+            user = User.objects.get(id=id)
+            user.set_password(password)
+            user.save()
+            Cache.getInstance().delete("RESET_" + str(id) + "_TOKEN")
+            result = {'status': True, 'message': 'Password reset successful'}
+            return Response(result, status=status.HTTP_200_OK, content_type="application/json")
+        except jwt.exceptions.InvalidSignatureError as e:
+            result = {'status':False, 'message':"reset password url is corrupt."}
+            return Response(result, status.HTTP_400_BAD_REQUEST, content_type="application/json")
+        except LMSException as e:
+            result = {'status':False, 'message':e.message}
+            return Response(result, status.HTTP_400_BAD_REQUEST, content_type="application/json")
+        except Exception as e:
+            return Response({'message':str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR, content_type="application/json")
 
 
