@@ -14,7 +14,7 @@ def user_login_required(view_func):
     """
     def wrapper(request, *args, **kwargs):
         try:
-            token = request.META['HTTP_AUTHORIZATION']
+            token = request.META.get('HTTP_AUTHORIZATION')
             decoded_token = Encrypt.decode(token)
             cache_key = Cache.getInstance().get("TOKEN_"+str(decoded_token['id'])+"_AUTH")
             if cache_key.decode("utf-8") == token:
@@ -33,7 +33,7 @@ def user_login_required(view_func):
             HttpResponse.status_code = status.HTTP_400_BAD_REQUEST
             return HttpResponse(json.dumps(result), HttpResponse.status_code)
         except Exception as e:
-            result = {'status': False, 'message':'Some other issue.Please try again'}
+            result = {'status': False, 'message':"Something went wrong."}
             HttpResponse.status_code = status.HTTP_400_BAD_REQUEST
             return HttpResponse(json.dumps(result), HttpResponse.status_code)
 
