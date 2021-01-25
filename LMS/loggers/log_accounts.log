@@ -1,0 +1,7 @@
+2021-01-24 17:27:54,170  account.views  DEBUG: validated data: retrieved users
+2021-01-24 17:28:00,375  account.views  DEBUG: validated data: retrieved users
+2021-01-24 17:28:05,895  account.views  DEBUG: validated data: retrieved users
+2021-01-24 17:48:16,721  account.views  DEBUG: validated data: Logged out
+2021-01-24 17:48:39,186  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-24 17:49:19,889  account.views  DEBUG: validated data: retrieved users
+2021-01-24 17:58:29,859  account.views  DEBUG: validated data: retrieved users
