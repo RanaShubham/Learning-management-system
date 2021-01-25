@@ -16,8 +16,6 @@ from .utils import Util
 from rest_framework import serializers
 from LMS.utils import ExceptionType, LMSException
 
-admin_role_id = Role.objects.get(role='admin').role_id
-
 @method_decorator(user_login_required, name='dispatch')
 class RegisterUser(APIView):
 
@@ -29,6 +27,7 @@ class RegisterUser(APIView):
         :return:Response with status of success and data if successful.
         """
         try:
+            admin_role_id = Role.objects.get(role='admin').role_id
             current_user_id = kwargs.get('userid')
             if User.objects.get(id=current_user_id).role.role_id != admin_role_id:
                 raise LMSException(ExceptionType.UnauthorizedError,"You are not authorized to perform this operation.")
@@ -57,6 +56,7 @@ class RegisterUser(APIView):
         :return:creation confirmation and status code.Email is sent to host email User.
         """
         try:
+            admin_role_id = Role.objects.get(role='admin').role_id
             requesting_user_id = kwargs.get('userid')
             requesting_user_role = User.objects.get(id=requesting_user_id).role
             # requesting_user_role_name = Role.objects.get(role_id =  requesting_user_role_id).role_name
@@ -107,6 +107,7 @@ class RegisterUser(APIView):
         """
 
         try:
+            admin_role_id = Role.objects.get(role='admin').role_id
             current_user_id = kwargs.get('userid')
             if  User.objects.get(id=current_user_id).role.role_id != admin_role_id:
                 raise LMSException(ExceptionType.UnauthorizedError,"You are not authorized to perform this operation.")
@@ -144,6 +145,7 @@ class RegisterUser(APIView):
         :return:deletion confirmation and status code
         """
         try:
+            admin_role_id = Role.objects.get(role='admin').role_id
             current_user_id = kwargs['userid']
             if User.objects.get(id=current_user_id).role.role_id != admin_role_id:
                 raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.")

@@ -74,6 +74,7 @@ class Role(models.Model):
             Role(role_id = 1, role = 'admin').save()
         return Role.objects.filter(role='admin').first()
 
+
          
 class User(AbstractBaseUser, PermissionsMixin):
     """[User model for diffrent type of users.]
