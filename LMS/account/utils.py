@@ -15,11 +15,11 @@ class EmailThread(threading.Thread):
 class Util:
     @staticmethod
     def send_email(user):
-        # if flag is not None:
         password = ''.join(store())
 
         print(password)
-        email_body = 'Hi '+user.name + '\nUse the credentials below to login and fill in your details \n' + 'Email:'+user.email+ '\nPassword:'+ password+'\nThank you,\nTeam LMS'
+        email_body = 'Hi '+user.name + '\nUse the credentials below to login and fill in your details \n' + \
+            'Email:'+user.email+ '\nPassword:'+ password+'\nThank you,\nTeam LMS'
         data = {'email_body': email_body, 'to_email': user.email,
                 'email_subject': 'Login Credentials for LMS'}
         email = EmailMessage(
@@ -69,4 +69,5 @@ def get_random_password():
 def store(*values):
     store.values = values or store.values
     return store.values
+    
 store.values = ()

@@ -13,3 +13,5 @@ LMS/student/dummy_data.py
 LMS/db.sqlite3
 *htmlcov*
 /account/migrations/0004_auto_20210121_1322.py
+*_initial.py
+*_auto_*

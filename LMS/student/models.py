@@ -15,12 +15,12 @@ class Student(models.Model):
     degree = models.CharField(max_length=20, blank=False, null=False)
     degree_stream = models.CharField(max_length=20, blank=False, null=False)
     degree_percentage = models.FloatField(max_length=5, blank=False, null=False)
-    degree_graduation_year = models.IntegerField(max_length=5, blank=False, null=False)
+    degree_graduation_year = models.IntegerField(blank=False, null=False)
     masters = models.CharField(max_length=20, blank=True, null=True)
     masters_stream = models.CharField(max_length=20, blank=True, null=True)
     masters_percentage = models.FloatField(max_length=5, blank=True, null=True)
-    year_of_job_experience = models.IntegerField(max_length=50, blank=True, null=True)
-    year_of_masters = models.IntegerField(max_length=5, blank=True, null=True)
+    year_of_job_experience = models.IntegerField(blank=True, null=True) 
+    year_of_masters = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
         return self.email

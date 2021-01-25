@@ -27,10 +27,10 @@ def user_login_required(view_func):
     """
     def wrapper(request, *args, **kwargs):
         try:
-            token = request.META['HTTP_AUTHORIZATION']
+            token = request.META.get('HTTP_AUTHORIZATION')
             decoded_token = Encrypt.decode(token)
             cache_key = Cache.getInstance().get("TOKEN_"+str(decoded_token['id'])+"_AUTH")
-            if cache_key is not None and cache_key.decode("utf-8") == token:
+            if cache_key and cache_key.decode("utf-8") == token:
                 kwargs['userid'] = decoded_token['id']
                 logger.debug('login token verified for user id: {}'.format(kwargs['userid']))
                 return view_func(request, *args , **kwargs)
