@@ -5,7 +5,7 @@ from LMS.utils import ExceptionType, LMSException
 
 class UserManager(BaseUserManager):
 
-    def create_superuser(self, name, email, phone_number,password,role, **other_fields):
+    def create_superuser(self, name, email, phone_number, password, role, **other_fields):
         """
         takes details of the user as input and if all details are valid then it will create superuser profile
         """
@@ -14,16 +14,16 @@ class UserManager(BaseUserManager):
         other_fields.setdefault('is_active', True)
 
         if other_fields.get('is_staff') is not True:
-           raise LMSException(ExceptionType.UserException,
-               'Superuser must be assigned to is_staff=True.')
+            raise LMSException(ExceptionType.UserException,
+                               'Superuser must be assigned to is_staff=True.')
         if other_fields.get('is_superuser') is not True:
             raise LMSException(ExceptionType.UserException,
-                'Superuser must be assigned to is_superuser=True.')
+                               'Superuser must be assigned to is_superuser=True.')
 
-        return self.create_user(name=name, email=email,role=role,
-                                password=password,phone_number=phone_number, **other_fields)
+        return self.create_user(name=name, email=email, role=role,
+                                password=password, phone_number=phone_number, **other_fields)
 
-    def create_user(self, email, name, role,phone_number,password='password', **other_fields):
+    def create_user(self, email, name, role, phone_number, password='password', **other_fields):
         """
         takes details of the user as input and if all credentials are valid then it will create user
         """
@@ -39,7 +39,7 @@ class UserManager(BaseUserManager):
             raise LMSException(ExceptionType.UserException, "User must have a phone number")
 
         email = self.normalize_email(email)
-        user = self.model(name=name,  email=email,role = role,phone_number=phone_number,
+        user = self.model(name=name, email=email, role=role, phone_number=phone_number,
                           password=password, **other_fields)
 
         user.name = name
@@ -64,7 +64,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['name','role','phone_number']
+    REQUIRED_FIELDS = ['name', 'role', 'phone_number']
 
     def __str__(self):
         '''
@@ -76,4 +76,3 @@ class User(AbstractBaseUser, PermissionsMixin):
     def soft_delete(self):
         self.is_deleted = True
         self.save()
-

@@ -4,15 +4,15 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
-class RegisterSerializer(ModelSerializer):
 
+class RegisterSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ['id','email', 'name', 'role','phone_number',]
-
+        fields = ['id', 'email', 'name', 'role', 'phone_number', ]
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)
+
 
 class LoginSerializer(ModelSerializer):
     """[validates user credentials and allows login if authenticated]
@@ -26,7 +26,7 @@ class LoginSerializer(ModelSerializer):
     """
     email = serializers.EmailField(max_length=255, min_length=3)
     password = serializers.CharField(
-        max_length=68, min_length=6, write_only=True)
+        max_length=68, min_length=3, write_only=True)
 
     class Meta:
         model = User
@@ -48,5 +48,3 @@ class LoginSerializer(ModelSerializer):
         return {
             'email': user.email,
         }
-
-

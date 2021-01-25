@@ -5,6 +5,7 @@ from django.core.mail import EmailMessage
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 
+
 class EmailThread(threading.Thread):
 
     def __init__(self, email):
@@ -14,15 +15,16 @@ class EmailThread(threading.Thread):
     def run(self):
         self.email.send()
 
+
 class Util:
     @staticmethod
     def send_email(user):
         # if flag is not None:
-        email_body = 'Hi '+user.name + ' Use the credentials below to login and fill in your details \n' + 'Email:'+user.email+ '\nPassword: password'+'\nThank you,\nTeam LMS'
+        email_body = 'Hi ' + user.name + ' Use the credentials below to login and fill in your details \n' + 'Email:' + user.email + '\nPassword: password' + '\nThank you,\nTeam LMS'
         data = {'email_body': email_body, 'to_email': user.email,
                 'email_subject': 'Login Credentials for LMS'}
         email = EmailMessage(
-            subject=data['email_subject'],body=data['email_body'], to=[data['to_email']])
+            subject=data['email_subject'], body=data['email_body'], to=[data['to_email']])
         EmailThread(email).start()
 
 

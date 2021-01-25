@@ -45,7 +45,7 @@ class StudentDetailsTest(Data):
             "masters_percentage": 77,
             "year_of_job_experience": 1,
             "year_of_masters": 2023,
-            'masters': 'Mtech'
+            "masters": "Mtech"
         }
 
         self.valid_patch_data = {
