@@ -1,6 +1,4 @@
 from .views import * #LoginUser, RegisterUser
-#from rest_framework_simplejwt.views import TokenRefreshView
-
 from django.conf import settings
 from django.urls.conf import path, re_path
 

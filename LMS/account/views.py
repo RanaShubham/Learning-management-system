@@ -6,7 +6,7 @@ import jwt
 from django.urls import reverse
 from django.utils.encoding import force_str
 
-from .serializers import LoginSerializer,RegisterSerializer,ResetPasswordEmailRequestSerializer,SetNewPasswordSerializer
+from .serializers import LoginSerializer,RegisterSerializer
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -270,7 +270,6 @@ class LoginUser(APIView):
 class RequestPasswordResetEmail(APIView):
     """[sends an email to facilitate password reset]
     """
-    serializer_class = ResetPasswordEmailRequestSerializer
 
     def post(self, request, **kwargs):
         """[sends an email to facilitate password reset]
@@ -310,7 +309,6 @@ class RequestPasswordResetEmail(APIView):
 class SetNewPassword(APIView):
     """[returns new password when supplied with uid,token and new password]
     """
-    serializer_class = SetNewPasswordSerializer
 
     def patch(self, request, **kwargs):
         """[returns new password when supplied with uid,token and new password]
