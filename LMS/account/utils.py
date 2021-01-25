@@ -17,7 +17,6 @@ class EmailThread(threading.Thread):
 class Util:
     @staticmethod
     def send_email(user):
-        # if flag is not None:
         password = ''.join(store())
 
         print(password)
@@ -46,4 +45,5 @@ def get_random_password():
 def store(*values):
     store.values = values or store.values
     return store.values
+    
 store.values = ()

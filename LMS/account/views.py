@@ -1,8 +1,6 @@
 import datetime
 from django.urls import reverse
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from django.utils.encoding import force_str, smart_bytes
-from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_str
 import jwt
 from .serializers import LoginSerializer,RegisterSerializer,ResetPasswordEmailRequestSerializer,SetNewPasswordSerializer
 from rest_framework.exceptions import AuthenticationFailed
@@ -11,13 +9,14 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.utils.decorators import method_decorator
 from .decorators import user_login_required
-from .models import User
+from .models import Role, User
 from services.encrypt import Encrypt
 from services.cache import Cache
 from .utils import Util
 from rest_framework import serializers
 from LMS.utils import ExceptionType, LMSException
 
+admin_role_id = Role.objects.get(role='admin').role_id
 
 @method_decorator(user_login_required, name='dispatch')
 class RegisterUser(APIView):
@@ -25,14 +24,14 @@ class RegisterUser(APIView):
     def get(self, request,**kwargs):
         """[To get all the registered User details when logged in as admin.]
 
-        :param kwargs: [mandatory]:[string]dictionary containing requesting user's id generated from decoded token
+        :param kwargs: [mandatory]:[string]dictionary containing requesting user's
+         id generated from decoded token
         :return:Response with status of success and data if successful.
         """
         try:
             current_user_id = kwargs.get('userid')
-            if not (User.objects.get(id=current_user_id).role == 'admin'):
-                raise LMSException(ExceptionType.UnauthorizedError,"Sorry, you are not authorized\
-                     to perform this operation.")
+            if User.objects.get(id=current_user_id).role.role_id != admin_role_id:
+                raise LMSException(ExceptionType.UnauthorizedError,"You are not authorized to perform this operation.")
 
             users = User.objects.filter(is_deleted=False)
             serializer = RegisterSerializer(users, many=True)
@@ -45,39 +44,57 @@ class RegisterUser(APIView):
         except User.DoesNotExist:
             response = {'status': False, 'message': 'Please login again.'}
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
-        except Exception:
+        except Exception as e:
             response = {'status':False, 'message':'Somethign went wrong.'}
             return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def post(self, request, **kwargs):
         """[create User for user by taking in user details]
 
-        :param kwargs: [mandatory]:[string]dictionary containing requesting user's id generated from decoded token
+        :param kwargs: [mandatory]:[string]dictionary containing requesting user's id
+         generated from decoded token
         :param request:[mandatory]: name,email,role,phone_number of user to be created
         :return:creation confirmation and status code.Email is sent to host email User.
         """
-
         try:
-            current_user_id = kwargs.get('userid')
-            if not (User.objects.get(id=current_user_id).role == 'admin'):
-                raise LMSException(ExceptionType.UnauthorizedError,"Sorry,you are not authorized to perform\
-                     this operation.")
+            requesting_user_id = kwargs.get('userid')
+            requesting_user_role = User.objects.get(id=requesting_user_id).role
+            # requesting_user_role_name = Role.objects.get(role_id =  requesting_user_role_id).role_name
+            if requesting_user_role.role_id != admin_role_id:
+                raise LMSException(ExceptionType.UnauthorizedError,"You are not authorized to perform this operation.")
+
+            normalized_admission_role = request.data['role'].lower()
+            
+            admission_role_obj = Role.objects.filter(role = normalized_admission_role).first()
+
+            if not admission_role_obj:
+                raise LMSException(ExceptionType.RoleError, "{} is not a valid role.".format(normalized_admission_role))
+
+            request.POST._mutable = True
+            request.data['role'] = admission_role_obj.pk
+            request.POST._mutable = False
 
             serializer = RegisterSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            user_data = serializer.data
-            user = User.objects.get(email=user_data['email'], name=user_data['name'],
-                                    phone_number=user_data['phone_number'], role=user_data['role'])
+
+            user = User.objects.get(email=request.data.get('email'))
             Util.send_email(user)
             response = {'status': True,
                         'message': 'Registered successfully. Login Credentials have been sent to your email.'}
             return Response(response, status=status.HTTP_200_OK)
+
+        except KeyError as e:
+            result = {'status': False, 'message':"Please specify a role for the user to be registered."}
+            return Response(result, status.HTTP_400_BAD_REQUEST, content_type="application/json")
+        except LMSException as e:
+            result = {'status':False, 'message':e.message}
+            return Response(result, status.HTTP_400_BAD_REQUEST, content_type="application/json")
         except serializers.ValidationError as e:
             result = {'status': False, 'message': e.detail}
             return Response(result, status.HTTP_400_BAD_REQUEST, content_type="application/json")
         except Exception as e:
-            result = {'status': False, 'message': 'Some other issue.Please try again.'}
+            result = {'status': False, 'message': str(e)}
             return Response(result, status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
 
@@ -91,13 +108,20 @@ class RegisterUser(APIView):
 
         try:
             current_user_id = kwargs.get('userid')
-            if not (User.objects.get(id=current_user_id).role == 'admin'):
-                raise LMSException(ExceptionType.UnauthorizedError,"Sorry,you are not authorized to perform\
-                     this operation.")
+            if  User.objects.get(id=current_user_id).role.role_id != admin_role_id:
+                raise LMSException(ExceptionType.UnauthorizedError,"You are not authorized to perform this operation.")
 
             if not User.objects.filter(id=pk).exclude(is_deleted=True).exists():
-                raise LMSException(ExceptionType.NonExistentError, "Requested user does not exist")
+                raise LMSException(ExceptionType.NonExistentError, "No updatable record found.")
             user = User.objects.get(id=pk)
+            #If update contains 'role' update.
+            if request.data.get('role'):
+                normalized_admission_role = request.data.get('role').lower()
+                admission_role_obj = Role.objects.filter(role = normalized_admission_role).first()
+                request.POST._mutable = True
+                request.data['role'] = admission_role_obj.pk
+                request.POST._mutable = False
+
             serializer = RegisterSerializer(user, data=request.data, partial=True)
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
@@ -121,9 +145,8 @@ class RegisterUser(APIView):
         """
         try:
             current_user_id = kwargs['userid']
-            if not (User.objects.get(id=current_user_id).role == 'admin'):
-                raise LMSException(ExceptionType.UnauthorizedError, "Sorry,you are not authorized to perform\
-                     this operation.")
+            if User.objects.get(id=current_user_id).role.role_id != admin_role_id:
+                raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.")
 
             if not User.objects.filter(id=pk).exclude(is_deleted=True).exists():
                 raise LMSException(ExceptionType.NonExistentError, "Requested user does not exist")
@@ -150,7 +173,6 @@ class LoginUser(APIView):
         :return:login confirmation, authentication token containing user id and status code
         """
         try:
-
             serializer = LoginSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             user = User.objects.get(email=serializer.data['email'])
@@ -168,7 +190,7 @@ class LoginUser(APIView):
             result = {'status': False, 'message': 'Invalid credentials'}
             return Response(result, status.HTTP_401_UNAUTHORIZED, content_type="application/json")
         except Exception as e:
-            result = {'status': False, 'message': 'Some other issue.Please try again'}
+            result = {'status': False, 'message': str(e)}
             return Response(result, status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
     @method_decorator(user_login_required, name='dispatch')
@@ -242,13 +264,13 @@ class SetNewPassword(APIView):
             token = kwargs.get('reset_token')
             id = Encrypt.decode(token).get('id')
             cached_reset_token = force_str(Cache.getInstance().get("RESET_" + str(id) + "_TOKEN"))
-            if not cached_reset_token or cached_reset_token == 'None':
+            if cached_reset_token == 'None':
                 raise LMSException(ExceptionType.UnauthorizedError, "reset password url is expired.")
 
             if cached_reset_token != token:
                 raise LMSException(ExceptionType.UnauthorizedError, "reset password url is invalid.")
             
-            if not password or len(password) <= 3:
+            if not password or len(password) <= 2:
                 raise LMSException(ExceptionType.UserException,\
                      "Please provide a appropirate password with atleast 3 character.")
 
