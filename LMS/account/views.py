@@ -16,7 +16,7 @@ from .utils import Util
 from rest_framework import serializers
 from LMS.utils import ExceptionType, LMSException
 
-admin_role_id = Role.objects.get(role='admin').role_id
+# Role.objects.get(role='admin').role_id = Role.objects.get(role='admin').role_id
 
 @method_decorator(user_login_required, name='dispatch')
 class RegisterUser(APIView):
@@ -30,7 +30,7 @@ class RegisterUser(APIView):
         """
         try:
             current_user_id = kwargs.get('userid')
-            if User.objects.get(id=current_user_id).role.role_id != admin_role_id:
+            if User.objects.get(id=current_user_id).role.role_id != Role.objects.get(role='admin').role_id:
                 raise LMSException(ExceptionType.UnauthorizedError,"You are not authorized to perform this operation.")
 
             users = User.objects.filter(is_deleted=False)
@@ -60,7 +60,7 @@ class RegisterUser(APIView):
             requesting_user_id = kwargs.get('userid')
             requesting_user_role = User.objects.get(id=requesting_user_id).role
             # requesting_user_role_name = Role.objects.get(role_id =  requesting_user_role_id).role_name
-            if requesting_user_role.role_id != admin_role_id:
+            if requesting_user_role.role_id != Role.objects.get(role='admin').role_id:
                 raise LMSException(ExceptionType.UnauthorizedError,"You are not authorized to perform this operation.")
 
             normalized_admission_role = request.data['role'].lower()
@@ -82,7 +82,7 @@ class RegisterUser(APIView):
             Util.send_email(user)
             response = {'status': True,
                         'message': 'Registered successfully. Login Credentials have been sent to your email.'}
-            return Response(response, status=status.HTTP_200_OK)
+            return Response(response, status=status.HTTP_201_CREATED)
 
         except KeyError as e:
             result = {'status': False, 'message':"Please specify a role for the user to be registered."}
@@ -108,7 +108,7 @@ class RegisterUser(APIView):
 
         try:
             current_user_id = kwargs.get('userid')
-            if  User.objects.get(id=current_user_id).role.role_id != admin_role_id:
+            if  User.objects.get(id=current_user_id).role.role_id != Role.objects.get(role='admin').role_id:
                 raise LMSException(ExceptionType.UnauthorizedError,"You are not authorized to perform this operation.")
 
             if not User.objects.filter(id=pk).exclude(is_deleted=True).exists():
@@ -145,7 +145,7 @@ class RegisterUser(APIView):
         """
         try:
             current_user_id = kwargs['userid']
-            if User.objects.get(id=current_user_id).role.role_id != admin_role_id:
+            if User.objects.get(id=current_user_id).role.role_id != Role.objects.get(role='admin').role_id:
                 raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.")
 
             if not User.objects.filter(id=pk).exclude(is_deleted=True).exists():
