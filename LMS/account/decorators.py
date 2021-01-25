@@ -1,11 +1,23 @@
-import json, jwt, os
+
+import json,jwt,os
+import logging
+from .utils import Util
 from django.http import HttpResponse
 from rest_framework import status
 from services.cache import Cache
 from services.encrypt import Encrypt
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
-# import logging
+formatter = logging.Formatter('%(asctime)s  %(name)s  %(levelname)s: %(message)s')
+
+file_handler = logging.FileHandler(os.path.abspath("loggers/log_decorators.log"))
+file_handler.setFormatter(formatter)
+
+logger.addHandler(file_handler)
+
+
 
 def user_login_required(view_func):
     """[gets token and fetches user id verifying active status.
@@ -17,7 +29,7 @@ def user_login_required(view_func):
 
     def wrapper(request, *args, **kwargs):
         try:
-            token = request.META['HTTP_AUTHORIZATION']
+            token = request.META.get('HTTP_AUTHORIZATION')
             decoded_token = Encrypt.decode(token)
             cache_key = Cache.getInstance().get("TOKEN_" + str(decoded_token['id']) + "_AUTH")
             if cache_key is not None and cache_key.decode("utf-8") == token:
@@ -25,18 +37,22 @@ def user_login_required(view_func):
                 return view_func(request, *args, **kwargs)
             else:
                 result = {'status': False, 'message': 'User must be logged in'}
+
                 HttpResponse.status_code = status.HTTP_401_UNAUTHORIZED
                 return HttpResponse(json.dumps(result), HttpResponse.status_code)
         except jwt.ExpiredSignatureError as e:
-            result = {'status': False, 'message': 'Activation has expired.Please generate a new token'}
+            result = Util.manage_response(status=False, message='Activation has expired.Please generate a new token',
+                                          log=str(e), logger_obj=logger)
             HttpResponse.status_code = status.HTTP_401_UNAUTHORIZED
             return HttpResponse(json.dumps(result), HttpResponse.status_code)
         except jwt.exceptions.DecodeError as e:
-            result = {'status': False, 'message': 'Please provide a valid token'}
+            result = Util.manage_response(status=False, message='Please provide a valid token',
+                                          log=str(e), logger_obj=logger)
             HttpResponse.status_code = status.HTTP_400_BAD_REQUEST
             return HttpResponse(json.dumps(result), HttpResponse.status_code)
         except Exception as e:
-            result = {'status': False, 'message': str(e)}
+            result = Util.manage_response(status=False, message='Some other issue.Please try again',
+                                          log=str(e), logger_obj=logger)
             HttpResponse.status_code = status.HTTP_400_BAD_REQUEST
             return HttpResponse(json.dumps(result), HttpResponse.status_code)
 

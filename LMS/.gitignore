@@ -10,3 +10,13 @@ userReg/
 *dummy_data.py*
 *htmlcov*
 *coverage*
+.env
+*coverage*
+venv/
+LMS/student/dummy_data.py
+LMS/db.sqlite3
+*htmlcov*
+*migrations*
+!*__init__.py*
+*_initial.py
+*_auto_*
