@@ -4,7 +4,7 @@ class ExceptionType(enum.Enum):
     UserException = "Cannot create user instance."
     NonExistentError = "Requested user does not exist"
     UnauthorizedError = "Sorry,you are not authorized to perform this operation."
-    
+    RoleError = "No such role exists."
 
 class LMSException(Exception):
     """[Custom exception.]
