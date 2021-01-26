@@ -20,3 +20,4 @@ LMS/db.sqlite3
 !*__init__.py*
 *_initial.py
 *_auto_*
+*loggers*
