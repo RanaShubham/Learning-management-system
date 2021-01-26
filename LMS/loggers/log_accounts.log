@@ -14,3 +14,12 @@
 2021-01-25 19:03:15,339  account.views  ERROR: error: RoleError
 2021-01-25 19:06:15,009  account.views  DEBUG: validated data: Registered successfully.Login credentials sent.
 2021-01-25 19:07:23,453  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-25 22:12:39,625  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-25 22:14:50,913  account.views  DEBUG: validated data: Registered successfully.Login credentials sent.
+2021-01-25 22:16:52,664  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-25 22:21:33,296  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-25 22:22:03,405  account.views  ERROR: error: {'email': [ErrorDetail(string='user with this email already exists.', code='unique')]}
+2021-01-25 22:23:54,714  account.views  DEBUG: validated data: Registered successfully.Login credentials sent.
+2021-01-25 22:24:21,300  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-25 22:27:25,041  account.views  DEBUG: validated data: retrieved users
+2021-01-25 22:28:17,765  account.views  DEBUG: validated data: Token generated.Login successful.

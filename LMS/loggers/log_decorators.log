@@ -1,2 +1,6 @@
 2021-01-24 17:58:29,843  account.decorators  DEBUG: login token verified for user id: 1
 2021-01-25 06:47:55,986  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-25 22:29:02,191  account.decorators  ERROR: error: 'LMSException' object has no attribute 'detail'
+2021-01-25 22:29:17,069  account.decorators  ERROR: error: 'LMSException' object has no attribute 'detail'
+2021-01-25 22:29:27,713  account.decorators  ERROR: error: 'LMSException' object has no attribute 'detail'
+2021-01-26 06:24:08,174  account.decorators  ERROR: error: Invalid token type. Token must be a <class 'bytes'>

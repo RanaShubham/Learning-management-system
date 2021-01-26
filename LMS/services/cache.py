@@ -14,7 +14,7 @@ class Cache:
         :return: cache instance stored in __shared_instance
         """
 
-        if Cache.__shared_instance == None:
+        if Cache.__shared_instance is None:
             Cache.__shared_instance = Cache('localhost',6379)
         return Cache.__shared_instance
 

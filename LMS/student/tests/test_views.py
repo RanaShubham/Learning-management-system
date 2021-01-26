@@ -28,9 +28,7 @@ class StudentDetailsTest(Data):
 
     def test_student_with_valid_details(self):
         self.valid_registration_data = {
-            "name": "Astroboy",
-            "phone_number": "9876543210",
-            "alternate_contact_number": "9517538524",
+            "alternate_contact_number": "9517538",
             "relationship_of_alternate_contact_person": "Parent",
             "current_location": "Delhi",
             "current_address": "170, Ber Sarai, Hauz Khas, Delhi",
@@ -47,11 +45,11 @@ class StudentDetailsTest(Data):
             "year_of_masters": 2023,
             "masters": "Mtech"
         }
-
         self.valid_patch_data = {
-            "name": "Astrogirl"
+            "alternate_contact_number": "9517"
         }
         response = self.client.post(self.student_register_url, self.valid_registration_data, format='json')
+        headers = response.__getitem__(header="HTTP_AUTHORIZATION")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         response = self.client.get(self.single_student_url, format='json')
