@@ -2,7 +2,6 @@ import threading
 import random
 import string
 from django.core.mail import EmailMessage
-from django.http import HttpResponse
 
 from services.cache import Cache
 
@@ -31,11 +30,6 @@ class Util:
         email = EmailMessage(
             subject=data['email_subject'], body=data['email_body'], to=[data['to_email']])
         EmailThread(email).start()
-        # temp_password = HttpResponse()
-        # temp_password.__setitem__(header="HTTP_AUTHORIZATION", value= password)
-        # response = Response(result, status=status.HTTP_200_OK, content_type="application/json")
-        # response.__setitem__(header="HTTP_AUTHORIZATION", value=token)
-        # return response
 
     @staticmethod
     def send_reset_email(data):
