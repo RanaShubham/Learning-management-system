@@ -23,8 +23,8 @@ class Data(TestCase):
         """
         this method setup all the url and data which was required by all test cases
         """
-        self.admin_login_url = 'http://127.0.0.1:8000/users/login'  # reverse("login_user")
-        self.admin_register_user = 'http://127.0.0.1:8000/users/'  # reverse("register_get_update_delete")
+        self.admin_login_url = reverse("users:login_user")
+        self.admin_register_user = reverse("users:register_get_update_delete", kwargs={"pk":1})
         self.student_register_url = reverse("student-register")
         self.single_student_url = reverse("student-details", kwargs={"pk": 2})
 
@@ -68,7 +68,8 @@ class Data(TestCase):
 class StudentDetailsTest(Data):
 
     def test_student_with_valid_details(self):
-        user = User.objects.create_superuser(name='admin',email='adminpass@gmail.com', phone_number = '1234', password = 'adminpassword')
+        user = User.objects.create_superuser(name='admin', email='adminpass@gmail.com', phone_number='1234',
+                                             password='adminpassword')
         print(user.name)
         role = Role.objects.create(role_id=2, role='student')
         print(role.role)
@@ -76,7 +77,7 @@ class StudentDetailsTest(Data):
         response = self.client.post(self.admin_login_url, self.admin_login_data, format='application/json')
         headers = response.__getitem__(header="HTTP_AUTHORIZATION")
         self.client.post(self.admin_register_user, self.admin_register_user_data, HTTP_AUTHORIZATION=headers,
-                        format='application/json ')
+                         format='application/json ')
         password = Cache.getInstance().get("TOKEN_" + "password" + "_AUTH").decode("utf-8")
         print(password)
         self.student_login_data['password'] = password

@@ -94,3 +94,9 @@
 2021-01-26 12:19:19,314  account.views  DEBUG: validated data: Token generated.Login successful.
 2021-01-26 12:19:19,552  account.views  DEBUG: validated data: Registered successfully.Login credentials sent.
 2021-01-26 12:19:19,792  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-26 18:25:22,648  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-26 18:25:22,882  account.views  DEBUG: validated data: Registered successfully.Login credentials sent.
+2021-01-26 18:25:23,085  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-26 18:25:43,280  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-26 18:25:43,467  account.views  DEBUG: validated data: Registered successfully.Login credentials sent.
+2021-01-26 18:25:43,671  account.views  DEBUG: validated data: Token generated.Login successful.
