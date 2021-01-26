@@ -1,3 +1,4 @@
+
 import json,jwt,os
 import logging
 from .utils import Util
@@ -25,6 +26,7 @@ def user_login_required(view_func):
     :param view_func:[get/post/put/patch/delete view according to request]
     :return: call to view_func if everything is proper else exception messages and status code.
     """
+
     def wrapper(request, *args, **kwargs):
         try:
             token = request.META.get('HTTP_AUTHORIZATION')
@@ -38,7 +40,7 @@ def user_login_required(view_func):
                 result = Util.manage_response(status=False, message='User must be logged in',
                                                 log='User must be logged in', logger_obj=logger)
                 HttpResponse.status_code = status.HTTP_401_UNAUTHORIZED
-                return HttpResponse(json.dumps(result),HttpResponse.status_code)
+                return HttpResponse(json.dumps(result), HttpResponse.status_code)
         except jwt.ExpiredSignatureError as e:
             result = Util.manage_response(status=False, message='Activation has expired.Please generate a new token',
                                           log=str(e), logger_obj=logger)
@@ -56,7 +58,3 @@ def user_login_required(view_func):
             return HttpResponse(json.dumps(result), HttpResponse.status_code)
 
     return wrapper
-
-
-
-

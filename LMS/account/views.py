@@ -5,15 +5,14 @@ import os
 import jwt
 from django.urls import reverse
 from django.utils.encoding import force_str
-
-from .serializers import LoginSerializer,RegisterSerializer
+from .serializers import LoginSerializer, RegisterSerializer
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.utils.decorators import method_decorator
 from .decorators import user_login_required
-from .models import User,Role
+from .models import User, Role
 from services.encrypt import Encrypt
 from services.cache import Cache
 from .utils import Util
@@ -31,11 +30,10 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 
-
 @method_decorator(user_login_required, name='dispatch')
 class RegisterUser(APIView):
 
-    def get(self, request,**kwargs):
+    def get(self, request, **kwargs):
         """[To get all the registered User details when logged in as admin.]
 
         :param kwargs: [mandatory]:[string]dictionary containing requesting user's id generated from decoded token
@@ -50,7 +48,7 @@ class RegisterUser(APIView):
             users = User.objects.filter(is_deleted=False)
             serializer = RegisterSerializer(users, many=True)
             response = Util.manage_response(status=True, message='Retrieved all users.', data=serializer.data,
-                                           log='retrieved users', logger_obj=logger)
+                                            log='retrieved users', logger_obj=logger)
             return Response(response, status=status.HTTP_200_OK)
         except LMSException as e:
             response = Util.manage_response(status=False,
@@ -165,7 +163,6 @@ class RegisterUser(APIView):
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
-
     def delete(self, request, pk, **kwargs):
         """[sets current user's is_deleted flag to false]
 
@@ -266,7 +263,6 @@ class LoginUser(APIView):
                                             log=str(e), logger_obj=logger)
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
-
 class RequestPasswordResetEmail(APIView):
     """[sends an email to facilitate password reset]
     """
@@ -304,7 +300,6 @@ class RequestPasswordResetEmail(APIView):
                                             message="Something went wrong.Please try again",
                                             log=str(e), logger_obj=logger)
             return Response(response, status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
-
 
 class SetNewPassword(APIView):
     """[returns new password when supplied with uid,token and new password]
@@ -351,4 +346,3 @@ class SetNewPassword(APIView):
                                             log=str(e), logger_obj=logger)
             return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             content_type="application/json")
-

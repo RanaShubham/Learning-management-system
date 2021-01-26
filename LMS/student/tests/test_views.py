@@ -1,9 +1,12 @@
+from django.http import HttpResponse
 from django.urls import reverse
 from rest_framework import status
 import pytest
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
+from account.models import Role
+from services.cache import Cache
 
 User = get_user_model()
 
@@ -20,17 +23,27 @@ class Data(TestCase):
         """
         this method setup all the url and data which was required by all test cases
         """
+        self.admin_login_url = reverse("users:login_user")
+        self.admin_register_user = reverse("users:register_get_update_delete", kwargs={"pk":1})
         self.student_register_url = reverse("student-register")
-        self.single_student_url = reverse("student-details", kwargs={"pk": 1})
+        self.single_student_url = reverse("student-details", kwargs={"pk": 2})
 
+        self.admin_login_data = {
+            'email': 'adminpass@gmail.com',
+            'password': 'adminpassword'
+        }
 
-class StudentDetailsTest(Data):
-
-    def test_student_with_valid_details(self):
-        self.valid_registration_data = {
-            "name": "Astroboy",
-            "phone_number": "9876543210",
-            "alternate_contact_number": "9517538524",
+        self.admin_register_user_data = {
+            'email': 'random_email@gmail.com',
+            'name': 'random',
+            'phone_number': '92345',
+            'role': 'student',
+        }
+        self.student_login_data = {
+            'email': 'random_email@gmail.com',
+        }
+        self.valid_student_form = {
+            "alternate_contact_number": "9517538",
             "relationship_of_alternate_contact_person": "Parent",
             "current_location": "Delhi",
             "current_address": "170, Ber Sarai, Hauz Khas, Delhi",
@@ -45,17 +58,38 @@ class StudentDetailsTest(Data):
             "masters_percentage": 77,
             "year_of_job_experience": 1,
             "year_of_masters": 2023,
-            'masters': 'Mtech'
+            "masters": "Mtech"
+        }
+        self.valid_patch_data = {
+            "alternate_contact_number": "9517"
         }
 
-        self.valid_patch_data = {
-            "name": "Astrogirl"
-        }
-        response = self.client.post(self.student_register_url, self.valid_registration_data, format='json')
+
+class StudentDetailsTest(Data):
+
+    def test_student_with_valid_details(self):
+        user = User.objects.create_superuser(name='admin', email='adminpass@gmail.com', phone_number='1234',
+                                             password='adminpassword')
+        print(user.name)
+        role = Role.objects.create(role_id=2, role='student')
+        print(role.role)
+        print(user.name)
+        response = self.client.post(self.admin_login_url, self.admin_login_data, format='application/json')
+        headers = response.__getitem__(header="HTTP_AUTHORIZATION")
+        self.client.post(self.admin_register_user, self.admin_register_user_data, HTTP_AUTHORIZATION=headers,
+                         format='application/json ')
+        password = Cache.getInstance().get("TOKEN_" + "password" + "_AUTH").decode("utf-8")
+        print(password)
+        self.student_login_data['password'] = password
+        response = self.client.post(self.admin_login_url, self.student_login_data, format='application/json')
+        headers = response.__getitem__(header="HTTP_AUTHORIZATION")
+        response = self.client.post(self.student_register_url, self.valid_student_form, HTTP_AUTHORIZATION=headers,
+                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        response = self.client.get(self.single_student_url, format='json')
+        response = self.client.get(self.single_student_url, HTTP_AUTHORIZATION=headers, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        response = client.patch(self.single_student_url, self.valid_patch_data, format='json')
+        response = client.patch(self.single_student_url, self.valid_patch_data, HTTP_AUTHORIZATION=headers,
+                                format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)

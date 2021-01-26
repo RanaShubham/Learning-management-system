@@ -1,0 +1,46 @@
+2021-01-25 17:38:43,870  mentor.views  DEBUG: validated data: Retrieved mentor with id 3
+2021-01-25 17:54:35,017  mentor.views  DEBUG: validated data: Retrieved mentor with id None
+2021-01-25 17:54:53,627  mentor.views  DEBUG: validated data: Retrieved mentor with id None
+2021-01-25 18:25:14,570  mentor.views  DEBUG: validated data: Profile details added successfully.
+2021-01-25 18:25:32,975  mentor.views  DEBUG: validated data: Retrieved list of mentors
+2021-01-25 18:26:40,029  mentor.views  DEBUG: validated data: Retrieved list of mentors
+2021-01-25 18:27:11,733  mentor.views  DEBUG: validated data: Retrieved list of mentors
+2021-01-25 18:28:01,112  mentor.views  ERROR: error: You are not authorized to perform this operation.
+2021-01-25 18:28:27,242  mentor.views  ERROR: error: get() returned more than one Mentor -- it returned 2!
+2021-01-25 18:30:10,617  mentor.views  ERROR: error: get() returned more than one Mentor -- it returned 2!
+2021-01-25 18:31:42,743  mentor.views  ERROR: error: get() returned more than one Mentor -- it returned 2!
+2021-01-25 18:31:44,053  mentor.views  ERROR: error: get() returned more than one Mentor -- it returned 2!
+2021-01-25 18:31:46,925  mentor.views  ERROR: error: get() returned more than one Mentor -- it returned 2!
+2021-01-25 18:33:22,921  mentor.views  ERROR: error: get() returned more than one Mentor -- it returned 2!
+2021-01-25 18:35:10,088  mentor.views  DEBUG: validated data: Retrieved mentor with id None
+2021-01-25 18:35:39,278  mentor.views  ERROR: error: Got AttributeError when attempting to get a value for field `course` on serializer `MentorSerializer`.
+The serializer field might be named incorrectly and not match any attribute or key on the `QuerySet` instance.
+Original exception text was: 'QuerySet' object has no attribute 'course'.
+2021-01-25 18:35:40,932  mentor.views  ERROR: error: Got AttributeError when attempting to get a value for field `course` on serializer `MentorSerializer`.
+The serializer field might be named incorrectly and not match any attribute or key on the `QuerySet` instance.
+Original exception text was: 'QuerySet' object has no attribute 'course'.
+2021-01-25 18:43:34,015  mentor.views  ERROR: error: get() returned more than one Mentor -- it returned 2!
+2021-01-25 18:44:02,177  mentor.views  ERROR: error: An account with this user already exists.
+2021-01-25 18:48:47,489  mentor.views  DEBUG: validated data: Profile details added successfully.
+2021-01-26 06:45:10,953  mentor.views  ERROR: error: 'course'
+2021-01-26 06:50:34,907  mentor.views  DEBUG: validated data: Updated user record successfully.
+2021-01-26 06:51:03,721  mentor.views  ERROR: error: 'name'
+2021-01-26 06:51:53,308  mentor.views  DEBUG: validated data: Updated user record successfully.
+2021-01-26 06:54:05,575  mentor.views  DEBUG: validated data: Updated user record successfully.
+2021-01-26 06:54:29,383  mentor.views  DEBUG: validated data: Updated user record successfully.
+2021-01-26 06:55:34,162  mentor.views  ERROR: error: An account with this user already exists.
+2021-01-26 06:58:46,038  mentor.views  DEBUG: validated data: Retrieved mentor with id None
+2021-01-26 07:19:58,285  mentor.views  ERROR: error: 'User' object is not iterable
+2021-01-26 07:21:26,446  mentor.views  ERROR: error: 'User' object is not iterable
+2021-01-26 07:27:25,409  mentor.views  ERROR: error: 'User' object is not iterable
+2021-01-26 07:27:39,257  mentor.views  ERROR: error: 'User' object is not iterable
+2021-01-26 07:27:41,093  mentor.views  ERROR: error: 'User' object is not iterable
+2021-01-26 07:32:29,572  mentor.views  ERROR: error: 'User' object is not iterable
+2021-01-26 08:11:00,886  mentor.views  DEBUG: validated data: Retrieved mentor with id None
+2021-01-26 08:13:40,105  mentor.views  DEBUG: validated data: Retrieved mentor with id None
+2021-01-26 08:14:02,419  mentor.views  DEBUG: validated data: Retrieved mentor with id None
+2021-01-26 08:14:04,311  mentor.views  DEBUG: validated data: Retrieved mentor with id None
+2021-01-26 08:15:02,529  mentor.views  DEBUG: validated data: Retrieved mentor with id None
+2021-01-26 09:18:06,244  mentor.views  ERROR: error: An account with this user already exists.
+2021-01-26 09:18:18,105  mentor.views  DEBUG: validated data: Profile details added successfully.
+2021-01-26 09:18:43,555  mentor.views  DEBUG: validated data: Retrieved mentor with id None

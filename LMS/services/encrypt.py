@@ -8,11 +8,11 @@ class Encrypt:
     Returns:
         [encode or decode result]: [token or payload]
     """
+
     @staticmethod
     def decode(token):
-        return jwt.decode(token,'secret', algorithms=["HS256"])
+        return jwt.decode(token, 'secret', algorithms=["HS256"])
 
     @staticmethod
-    def encode(user_id,current_time):
-        return jwt.encode({"id": user_id,"current_time":current_time}, 'secret', algorithm="HS256")
-
+    def encode(user_id, current_time):
+        return jwt.encode({"id": user_id, "current_time": current_time}, 'secret', algorithm="HS256")

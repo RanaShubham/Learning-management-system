@@ -3,6 +3,7 @@ from account.models import User
 
 
 class Student(models.Model):
+    student_id = models.IntegerField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='author', null=True)  # name of user
     email = models.CharField(max_length=30)
     alternate_contact_number = models.CharField(max_length=13, blank=False, null=False)

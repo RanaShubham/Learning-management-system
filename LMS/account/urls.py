@@ -1,4 +1,4 @@
-from .views import * #LoginUser, RegisterUser
+from .views import  * #LoginUser, RegisterUser
 from django.conf import settings
 from django.urls.conf import path, re_path
 
