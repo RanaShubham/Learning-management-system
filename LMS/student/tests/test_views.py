@@ -76,7 +76,7 @@ class StudentDetailsTest(Data):
         response = self.client.post(self.admin_login_url, self.admin_login_data, format='application/json')
         headers = response.__getitem__(header="HTTP_AUTHORIZATION")
         self.client.post(self.admin_register_user, self.admin_register_user_data, HTTP_AUTHORIZATION=headers,
-                        format='application/json')
+                        format='application/json ')
         password = Cache.getInstance().get("TOKEN_" + "password" + "_AUTH").decode("utf-8")
         print(password)
         self.student_login_data['password'] = password
