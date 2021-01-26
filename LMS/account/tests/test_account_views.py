@@ -21,10 +21,9 @@ class Data(TestCase):
         """
         client = APIClient()
         User.objects.create_superuser(name="admin", email="admin@email.com", phone_number="1234567890", password="adminpass")
-        self.register_url = "http://127.0.0.1:8000/users/"#reverse("account:register_get_update_delete", kwargs={'pk':''})#"http://127.0.0.1:8000/users/"
+        self.register_url = reverse("account:register_get_update_delete", kwargs={'pk':''})
         self.login_url = reverse("account:login_user")
-        self.patch_url = "http://127.0.0.1:8000/users/1"
-        # self.reset_password_url = reverse("request-reset-email")
+        self.patch_url = reverse("account:register_get_update_delete", kwargs={'pk':'1'})
         password = ''.join(store())
         self.admin_data = {'email': "admin@email.com", 'password': "adminpass"}
         self.valid_registration_data = {'name': "adam",
