@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'student',
     'rest_framework.authtoken',
+    'urlshortening',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -139,3 +141,9 @@ EMAIL_PORT = config('EMAIL_PORT')
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = config('HOST_EMAIL')
 EMAIL_HOST_PASSWORD = config('HOST_PASSWORD')
+
+#Short url configuration
+INITIAL_URL_LEN = 6
+RETRY_COUNT = 5
+# SHORT_URL_PATH = 'http://127.0.0.1:8000/users/reset/'
+REDIRECT_PREFIX = 'r'
