@@ -203,7 +203,7 @@ class RegisterUser(APIView):
 
 class LoginUser(APIView):
 
-    def post(self, request):
+    def post(self, request, **kwargs):
         """[gets user with matching credentials and generates authentication token using id and time]
 
         :return:login confirmation, authentication token containing user id and status code
