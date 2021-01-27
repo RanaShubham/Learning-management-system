@@ -10,11 +10,9 @@ class MentorSerializer(serializers.ModelSerializer):
     """
     this class is used for serialization and deserialization of mentor details
     """
-    #user = RegisterSerializer(read_only=True)
 
     class Meta:
         model = Mentor
         fields = ['course','user']
-        depth = 2
 
 
