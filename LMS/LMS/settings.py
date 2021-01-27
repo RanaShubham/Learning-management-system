@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'account',
     'rest_framework',
     'student',
+    'mentor',
     'rest_framework.authtoken',
     'course',
 ]
