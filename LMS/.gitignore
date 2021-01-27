@@ -20,4 +20,4 @@ LMS/db.sqlite3
 *_initial.py
 *_auto_*
 *loggers*
-dump.rdb
+*dump.rdb*
