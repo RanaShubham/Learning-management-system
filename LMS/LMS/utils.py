@@ -5,6 +5,7 @@ class ExceptionType(enum.Enum):
     NonExistentError = "Requested user does not exist"
     UnauthorizedError = "Sorry,you are not authorized to perform this operation."
     RoleError = "No such role exists."
+    BadRequest = "Request is not proper."
 
 class LMSException(Exception):
     """[Custom exception.]

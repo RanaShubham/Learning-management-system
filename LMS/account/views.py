@@ -2,7 +2,7 @@ import datetime
 from django.urls import reverse
 from django.utils.encoding import force_str
 import jwt
-from .serializers import LoginSerializer,RegisterSerializer,ResetPasswordEmailRequestSerializer,SetNewPasswordSerializer
+from .serializers import LoginSerializer,RegisterSerializer
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -15,6 +15,7 @@ from services.cache import Cache
 from .utils import Util
 from rest_framework import serializers
 from LMS.utils import ExceptionType, LMSException
+from urlshortening.models import get_short_url, invalidate_url, get_full_url
 
 @method_decorator(user_login_required, name='dispatch')
 class RegisterUser(APIView):
@@ -218,8 +219,6 @@ class LoginUser(APIView):
 class RequestPasswordResetEmail(APIView):
     """[sends an email to facilitate password reset]
     """
-    serializer_class = ResetPasswordEmailRequestSerializer
-
     def post(self, request,**kwargs):
         """[sends an email to facilitate password reset]
 
@@ -236,8 +235,10 @@ class RequestPasswordResetEmail(APIView):
                 current_time = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
                 token = force_str(Encrypt.encode(user.id, current_time))
                 Cache.getInstance().set("RESET_" + str(user.id) + "_TOKEN", token)
-                redirect_url = reverse('account:reset_password', kwargs={'reset_token':token})
-                email_body = 'Hello, please click on the link below and enter new password when asked for\n'+redirect_url
+                short_token = get_short_url(token)
+                redirect_url = reverse('account:reset_password', kwargs={'reset_token':short_token.short_id})
+                url = request.build_absolute_uri(redirect_url)
+                email_body = 'Hello, please click on the link below and enter new password when asked for\n'+url
                 data = {'email_body': email_body, 'to_email': user.email,'email_subject': 'Reset your passsword'}
                 Util.send_reset_email(data)
                 result = {'status':True ,'message':'We have sent you a link to reset your password' }
@@ -253,8 +254,6 @@ class RequestPasswordResetEmail(APIView):
 class SetNewPassword(APIView):
     """[returns new password when supplied with uid,token and new password]
     """
-    serializer_class = SetNewPasswordSerializer
-
     def patch(self, request,**kwargs):
         """[returns new password when supplied with uid,token and new password]
         
@@ -262,14 +261,20 @@ class SetNewPassword(APIView):
         :return: confirmation message and status code
         """
         try:
+            confirm_password = request.data.get('confirm_password')
             password = request.data.get('password')
-            token = kwargs.get('reset_token')
-            id = Encrypt.decode(token).get('id')
+
+            if confirm_password != password:
+                raise LMSException(ExceptionType.BadRequest, "password and confirm_password should match")
+
+            short_token_id = kwargs.get('reset_token')
+            token = get_full_url(short_token_id)
+            id = Encrypt.decode(token.url).get('id')
             cached_reset_token = force_str(Cache.getInstance().get("RESET_" + str(id) + "_TOKEN"))
             if cached_reset_token == 'None':
                 raise LMSException(ExceptionType.UnauthorizedError, "reset password url is expired.")
 
-            if cached_reset_token != token:
+            if cached_reset_token != token.url:
                 raise LMSException(ExceptionType.UnauthorizedError, "reset password url is invalid.")
             
             if not password or len(password) <= 2:
@@ -279,12 +284,13 @@ class SetNewPassword(APIView):
             user = User.objects.get(id=id)
             user.set_password(password)
             user.save()
+            invalidate_url(short_token_id)
             Cache.getInstance().delete("RESET_" + str(id) + "_TOKEN")
             result = {'status': True, 'message': 'Password reset successful'}
             return Response(result, status=status.HTTP_200_OK, content_type="application/json")
         except jwt.exceptions.InvalidSignatureError as e:
             result = {'status':False, 'message':"reset password url is corrupt."}
-            return Response(result, status.HTTP_400_BAD_REQUEST, content_type="application/json")
+            return Response(result, status.HTTP_401_UNAUTHORIZED, content_type="application/json")
         except LMSException as e:
             result = {'status':False, 'message':e.message}
             return Response(result, status.HTTP_400_BAD_REQUEST, content_type="application/json")
