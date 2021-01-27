@@ -1,6 +1,8 @@
 from .views import  * #LoginUser, RegisterUser
 from django.conf import settings
-from django.urls.conf import path, re_path
+from django.urls.conf import path
+from django.conf.urls import url, re_path
+
 
 app_name = "account"
 

@@ -14,3 +14,5 @@ userReg/
 !*__init__.py*
 *_initial.py
 *_auto_*
+dump.rdb
+.pytest_cache

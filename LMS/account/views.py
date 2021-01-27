@@ -41,10 +41,9 @@ class RegisterUser(APIView):
         :return:Response with status of success and data if successful.
         """
         try:
-            admin_role_id = Role.objects.get(role='admin').role_id
             current_user_id = kwargs.get('userid')
-            if User.objects.get(id=current_user_id).role.role_id != admin_role_id:
-                raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.")
+            if User.objects.get(id=current_user_id).role.role_id != Role.objects.get(role='admin').role_id:
+                raise LMSException(ExceptionType.UnauthorizedError,"You are not authorized to perform this operation.")
 
             logger.info('retrieving list of registered users')
             users = User.objects.filter(is_deleted=False)
@@ -72,12 +71,11 @@ class RegisterUser(APIView):
         """
 
         try:
-            admin_role_id = Role.objects.get(role='admin').role_id
             requesting_user_id = kwargs.get('userid')
             requesting_user_role = User.objects.get(id=requesting_user_id).role
             # requesting_user_role_name = Role.objects.get(role_id =  requesting_user_role_id).role_name
-            if requesting_user_role.role_id != admin_role_id:
-                raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.")
+            if requesting_user_role.role_id != Role.objects.get(role='admin').role_id:
+                raise LMSException(ExceptionType.UnauthorizedError,"You are not authorized to perform this operation.")
 
             normalized_admission_role = request.data['role'].lower()
 
@@ -98,7 +96,11 @@ class RegisterUser(APIView):
             Util.send_email(user)
             response = Util.manage_response(status=True, message='Registered successfully.Login Credentials have been sent to your email.',
                                             log='Registered successfully.Login credentials sent.', logger_obj=logger)
-            return Response(response, status=status.HTTP_200_OK)
+            return Response(response, status=status.HTTP_201_CREATED)
+
+        except KeyError as e:
+            result = {'status': False, 'message':"Please specify a role for the user to be registered."}
+            return Response(result, status.HTTP_400_BAD_REQUEST, content_type="application/json")
         except LMSException as e:
             response = Util.manage_response(status=False,
                                             message=e.message,
@@ -173,9 +175,8 @@ class RegisterUser(APIView):
         :return:deletion confirmation and status code
         """
         try:
-            admin_role_id = Role.objects.get(role='admin').role_id
             current_user_id = kwargs['userid']
-            if User.objects.get(id=current_user_id).role.role_id != admin_role_id:
+            if User.objects.get(id=current_user_id).role.role_id != Role.objects.get(role='admin').role_id:
                 raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.")
 
             if not User.objects.filter(id=pk).exclude(is_deleted=True).exists():
@@ -352,5 +353,4 @@ class SetNewPassword(APIView):
             response = Util.manage_response(status=False,
                                             message="Something went wrong.Please try again",
                                             log=str(e), logger_obj=logger)
-            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            content_type="application/json")
+            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR,content_type="application/json")
