@@ -3,6 +3,7 @@ import logging
 import os
 
 import jwt
+from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.encoding import force_str
 from .serializers import LoginSerializer, RegisterSerializer
@@ -45,6 +46,7 @@ class RegisterUser(APIView):
             if User.objects.get(id=current_user_id).role.role_id != admin_role_id:
                 raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.")
 
+            logger.info('retrieving list of registered users')
             users = User.objects.filter(is_deleted=False)
             serializer = RegisterSerializer(users, many=True)
             response = Util.manage_response(status=True, message='Retrieved all users.', data=serializer.data,
@@ -87,7 +89,7 @@ class RegisterUser(APIView):
             request.POST._mutable = True
             request.data['role'] = admission_role_obj.pk
             request.POST._mutable = False
-
+            logger.info('posting new user with incoming details')
             serializer = RegisterSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
@@ -118,7 +120,7 @@ class RegisterUser(APIView):
 
 
 
-    def patch(self,request,pk,**kwargs):
+    def patch(self,request,**kwargs):
         """[updates a user's one or more credentials]
 
         :param kwargs: [mandatory]:[string]dictionary containing requesting user's id generated from decoded token
@@ -126,14 +128,17 @@ class RegisterUser(APIView):
         """
 
         try:
-            admin_role_id = Role.objects.get(role='admin').role_id
             current_user_id = kwargs.get('userid')
-            if User.objects.get(id=current_user_id).role.role_id != admin_role_id:
+            current_user_role = kwargs.get('role')
+            update_user = User.objects.filter(id=kwargs.get('pk')).exclude(is_deleted=True).first()
+            update_user_role = update_user.role.__str__()
+            if not update_user:  #if user to be updated isn't in database
+                raise LMSException(ExceptionType.NonExistentError, "No such user record found.")
+            if current_user_role != 'admin' and current_user_role != update_user_role: #if requesting user isn't admin or same role as in user record to be updated
                 raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.")
+            if current_user_role == update_user_role and str(current_user_id) != kwargs.get('pk'): #if requesting user is same role but not owner of user record he wants to update
+                raise LMSException(ExceptionType.UnauthorizedError,"Sorry,you are not authorized to update other user's credentials.")
 
-            if not User.objects.filter(id=pk).exclude(is_deleted=True).exists():
-                raise LMSException(ExceptionType.NonExistentError, "No updatable record found.")
-            user = User.objects.get(id=pk)
             # If update contains 'role' update.
             if request.data.get('role'):
                 normalized_admission_role = request.data.get('role').lower()
@@ -141,8 +146,8 @@ class RegisterUser(APIView):
                 request.POST._mutable = True
                 request.data['role'] = admission_role_obj.pk
                 request.POST._mutable = False
-
-            serializer = RegisterSerializer(user, data=request.data, partial=True)
+            logger.info('updating existing user with incoming details')
+            serializer = RegisterSerializer(update_user, data=request.data, partial=True)
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
             user_data = serializer.data
@@ -178,6 +183,7 @@ class RegisterUser(APIView):
             if not User.objects.filter(id=pk).exclude(is_deleted=True).exists():
                 raise LMSException(ExceptionType.NonExistentError, "Requested user does not exist")
             else:
+                logger.info('deleting existing user with given id')
                 user = User.objects.get(id=pk)
                 user.soft_delete()
             response = Util.manage_response(status=True,
@@ -210,9 +216,10 @@ class LoginUser(APIView):
 
             serializer = LoginSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
+            logger.info('checking existing user with given email')
             user = User.objects.get(email=serializer.data['email'])
             current_time = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
-            token = Encrypt.encode(user.id, current_time)
+            token = Encrypt.encode(user.id,user.role.role, current_time)
             Cache.getInstance().set("TOKEN_" + str(user.id) + "_AUTH", token)
             result = Util.manage_response(status=True,
                                             message='Token generated.Login successful.',
@@ -250,6 +257,7 @@ class LoginUser(APIView):
         try:
             cache = Cache.getInstance()
             current_user = kwargs['userid']
+            logger.info("checking for requesting user's token record in cache ")
             if cache.get("TOKEN_" + str(current_user) + "_AUTH"):
                 cache.delete("TOKEN_" + str(current_user) + "_AUTH")
             response = Util.manage_response(status=True,
@@ -276,7 +284,7 @@ class RequestPasswordResetEmail(APIView):
         """
         try:
             email = request.data.get('email', '')
-
+            logger.info("checking for user with given email ")
             if User.objects.filter(email=email).exists():
                 user = User.objects.get(email=email)
                 current_time = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
@@ -322,6 +330,7 @@ class SetNewPassword(APIView):
                 raise LMSException(ExceptionType.UnauthorizedError, "reset password url is invalid.")
             if not password or len(password) <= 2:
                 raise LMSException(ExceptionType.UserException, "Please provide a appropirate password with atleast 3 character.")
+            logger.info("checking for user matching id retrieved from token")
             user = User.objects.get(id=id)
             user.set_password(password)
             user.save()
