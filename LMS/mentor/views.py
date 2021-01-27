@@ -1,12 +1,12 @@
 import logging,os
-from account.models import User, Role
+from account.models import User
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.utils.decorators import method_decorator
 from account.decorators import user_login_required
-from account.serializers import RegisterSerializer
 from account.utils import Util
+from course.models import Course
 from .models import Mentor
 from .serializers import MentorSerializer
 from LMS.utils import ExceptionType, LMSException
@@ -26,7 +26,7 @@ logger.addHandler(file_handler)
 @method_decorator(user_login_required,name='dispatch')
 class AdminView(APIView):
 
-    def get(self,*args,**kwargs):
+    def get(self,request,**kwargs):
         """[displays specific/all mentors' personal details and courses]
             args: kwargs[pk]: user id of the mentor
             Returns:
@@ -35,10 +35,9 @@ class AdminView(APIView):
         """
         try:
             current_user_id = kwargs.get('userid')
-            print(User.objects.get(id=current_user_id).role)
             if User.objects.get(id=current_user_id).role.__str__() == "admin":
-                print(kwargs.get('pk'))
                 if(kwargs.get('pk')):
+                    logger.info("checking for mentor with matching userid retrieved from pk")
                     mentor_user = User.objects.filter(id=kwargs.get('pk')).first()
                     #if not mentor_user or mentor_user.role.__ne__('mentor'):
                     if not mentor_user or mentor_user.role.__str__() != 'mentor':
@@ -77,7 +76,7 @@ class AdminView(APIView):
 @method_decorator(user_login_required,name='dispatch')
 class MentorProfile(APIView):
 
-    def get(self,*args,**kwargs):
+    def get(self,request,**kwargs):
         """[displays mentor's personal details and courses]
             args: kwargs[pk]: user id of the mentor
             Returns:
@@ -86,17 +85,26 @@ class MentorProfile(APIView):
         """
         try:
             current_user_id = kwargs.get('userid')
-            user= User.objects.get(id=current_user_id)
-            if user.role.__str__() != 'mentor':
+            current_user_role = kwargs.get('role')
+            if current_user_role != 'mentor':
                 raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.")
 
-            mentor = Mentor.objects.get(user=current_user_id)
+            mentor = Mentor.objects.filter(user=current_user_id).first()
+            if not mentor:
+                raise Mentor.DoesNotExist('No such mentor exists')
             serializer = MentorSerializer(mentor)
             response = Util.manage_response(status=True,
                                             message="Retrieved mentor details", data=serializer.data,
                                             log="Retrieved mentor with id {}".format(kwargs.get('pk')),
                                             logger_obj=logger)
             return Response(response, status=status.HTTP_200_OK, content_type="application/json")
+        except Mentor.DoesNotExist as e:
+            response = Util.manage_response(status=False,
+                                            message="Requested mentor profile does not exist",
+                                            log=str(e), logger_obj=logger)
+
+            return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
+
         except LMSException as e:
             response = Util.manage_response(status=False,
                                             message=e.message,
@@ -109,7 +117,7 @@ class MentorProfile(APIView):
                                             log=str(e), logger_obj=logger)
             return Response(response, status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
-    def post(self,request,*args,**kwargs):
+    def post(self,request,**kwargs):
         """[create User for user by taking in user details]
 
             :param kwargs: [mandatory]:[string]dictionary containing requesting user's id generated from decoded token
@@ -118,24 +126,39 @@ class MentorProfile(APIView):
         """
 
         try:
-            current_user_id = kwargs.get('userid')
-            user = User.objects.get(id=current_user_id)
-            if user.role.__str__() != 'mentor':
+            current_user_role = kwargs.get('role')
+            if current_user_role != 'admin':
                 raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.")
-            if Mentor.objects.get(user=current_user_id):
-                raise LMSException(ExceptionType.MentorExists, "An account with this user already exists.")
 
-            request.POST._mutable = True        #TODO:take course name from postman and set course id
-            request.data["user"] = kwargs['userid']
+            request.POST._mutable = True
+
+            user = User.objects.filter(email=request.data['email']).first()
+            if Mentor.objects.filter(user=user.id):
+                raise LMSException(ExceptionType.MentorExists, "An account with this user already exists.")
+            request.data["user"] = user.id
+
+            course = Course.objects.filter(name=request.data['course']).first()
+            if not course:
+                raise Course.DoesNotExist('No such course exists')
+            request.data["course"]=course.id
+
             request.POST._mutable = False
+
             serializer = MentorSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             response = Util.manage_response(status=True,
-                                            message='Profile details added successfully.',
+                                            message='Profile details added successfully.',data=serializer.data,
                                             log='Profile details added successfully.', logger_obj=logger)
             return Response(response, status=status.HTTP_200_OK)
 
+        except Course.DoesNotExist as e:
+            response = Util.manage_response(status=False,
+                                            message="Requested course does not exist",
+                                            log=str(e), logger_obj=logger)
+
+            return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
+
         except LMSException as e:
             response = Util.manage_response(status=False,
                                             message=e.message,
@@ -150,53 +173,33 @@ class MentorProfile(APIView):
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
 
-    def patch(self,request,**kwargs):  #args
-        """[update mentor personal details or courses taken]
-
-            :param kwargs: [mandatory]:[string]dictionary containing requesting user's id generated from decoded token
-            :param request:[optional]: one or more fields among name,email,phone_number,courses of mentor
-            :return:updation confirmation and status code.
-        """
+    def delete(self,request,**kwargs):
         try:
-            current_user_id = kwargs.get('userid')
-            user = User.objects.get(id=current_user_id)
-            if user.role.__str__() != 'mentor':
+            current_user_role = kwargs.get('role')
+            delete_mentor = User.objects.filter(id=kwargs.get('pk')).exclude(is_deleted=True).first()
+            if current_user_role != 'admin':  # if requesting user isn't admin
                 raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.")
-            # If update contains 'role' update.
-            mentor = Mentor.objects.get(user=current_user_id)
-            if request.data.get('role'):
-                raise LMSException(ExceptionType.UnauthorizedError, "You are not allowed to change your role.Please contact admin.")
+            if not delete_mentor:  # if user to be deleted isn't in database
+                raise LMSException(ExceptionType.NonExistentError, "No such user record found.")
 
-            data = request.data
-            if 'name' or 'phone_number' or 'email' in data:
-                serializer = RegisterSerializer(user, data=request.data, partial=True)
-                if serializer.is_valid(raise_exception=True):
-                    serializer.save()
-            if 'course' in data:
-                serializer = MentorSerializer(mentor,data=request.data, partial=True)
-                if serializer.is_valid(raise_exception=True):
-                    serializer.save()
-            user_data = serializer.data
+            logger.info('deleting existing mentor with given id')
+            delete_mentor.soft_delete()
             response = Util.manage_response(status=True,
-                                            message='Updated successfully.', data=user_data,
-                                            log='Updated user record successfully.', logger_obj=logger)
-
+                                            message='Deleted successfully.',
+                                            log='Deleted user record successfully.', logger_obj=logger)
             return Response(response, status=status.HTTP_200_OK)
+
         except LMSException as e:
             response = Util.manage_response(status=False,
                                             message=e.message,
                                             log=e.message, logger_obj=logger)
+
             return Response(response, status.HTTP_404_NOT_FOUND, content_type="application/json")
         except Exception as e:
             response = Util.manage_response(status=False,
                                             message="Something went wrong.Please try again",
                                             log=str(e), logger_obj=logger)
+
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
 
-#TODO:add more than one course object in profile[collaborator ref]
-#TODO: in mentor dashboard get view use Loginredirecturl:name of course,no.of students enrolled
-#TODO: mentor settings shows personal details and course name.,patch,delete course|phone_number
-#TODO:student detail page post,patch,get.Student detail has fields: student id(Student table),student name(User),course id(Course)
-#course name(Course),current score,assessment date,mentor name(Mentor table->user)
-#Student.objects.filter(course='python').count()
