@@ -7,7 +7,7 @@ class ExceptionType(enum.Enum):
     UnauthorizedError = "Sorry,you are not authorized to perform this operation."
     StudentNotFound = "student data not found"
     StudentExist = "student already exist"
-
+    MentorExists = "mentor already exists"
 
 class LMSException(Exception):
     """[Custom exception.]
