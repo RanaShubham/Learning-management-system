@@ -131,12 +131,10 @@ class RegisterUser(APIView):
             current_user_id = kwargs.get('userid')
             current_user_role = kwargs.get('role')
             update_user = User.objects.filter(id=kwargs.get('pk')).exclude(is_deleted=True).first()
-            update_user_role = update_user.role.__str__()
-            if not update_user:  #if user to be updated isn't in database
+            if not update_user:  # if user to be updated isn't in database
                 raise LMSException(ExceptionType.NonExistentError, "No such user record found.")
-            if current_user_role != 'admin' and current_user_role != update_user_role: #if requesting user isn't admin or same role as in user record to be updated
-                raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.")
-            if current_user_role == update_user_role and str(current_user_id) != kwargs.get('pk'): #if requesting user is same role but not owner of user record he wants to update
+
+            if current_user_role != 'admin' and str(current_user_id) != kwargs.get('pk'):
                 raise LMSException(ExceptionType.UnauthorizedError,"Sorry,you are not authorized to update other user's credentials.")
 
             # If update contains 'role' update.
@@ -288,10 +286,11 @@ class RequestPasswordResetEmail(APIView):
             if User.objects.filter(email=email).exists():
                 user = User.objects.get(email=email)
                 current_time = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
-                token = force_str(Encrypt.encode(user.id, current_time))
+                token = force_str(Encrypt.encode_reset(user.id, current_time))
                 Cache.getInstance().set("RESET_" + str(user.id) + "_TOKEN", token)
                 redirect_url = reverse('account:reset_password', kwargs={'reset_token': token})
-                email_body = 'Hello, please click on the link below and enter new password when asked for\n' + redirect_url
+                url = request.build_absolute_uri(redirect_url)
+                email_body = 'Hello, please click on the link below and enter new password when asked for\n' + url
                 data = {'email_body': email_body, 'to_email': user.email, 'email_subject': 'Reset your passsword'}
                 Util.send_reset_email(data)
                 result = Util.manage_response(status=True,
