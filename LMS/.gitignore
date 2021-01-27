@@ -16,3 +16,6 @@ userReg/
 *_auto_*
 dump.rdb
 .pytest_cache
+venv/
+*loggers*
+*dump.rdb*
