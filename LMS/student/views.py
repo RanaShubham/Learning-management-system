@@ -63,13 +63,13 @@ class StudentDetails(APIView):
                 raise LMSException(ExceptionType.StudentExist, 'student already exist')
         except LMSException as e:
             response = Util.manage_response(status=False,
-                                            message=e.detail,
+                                            message=e.message,
                                             log=str(e), logger_obj=logger)
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
         except Exception as e:
             response = Util.manage_response(status=False,
-                                            message=e.detail,
+                                            message="some other issue occurred",
                                             log=str(e), logger_obj=logger)
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
@@ -113,7 +113,7 @@ class StudentDetails(APIView):
                                        "Sorry,you are not authorized to perform this operation.")
         except LMSException as e:
             response = Util.manage_response(status=False,
-                                            message=e.detail,
+                                            message=e.message,
                                             log=str(e), logger_obj=logger)
 
             return Response(response, status.HTTP_401_UNAUTHORIZED, content_type="application/json")
@@ -125,7 +125,7 @@ class StudentDetails(APIView):
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
         except Exception as e:
             response = Util.manage_response(status=False,
-                                            message=e.detail,
+                                            message="some other issue occurred",
                                             log=str(e), logger_obj=logger)
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
@@ -161,7 +161,7 @@ class StudentDetails(APIView):
                                    "Sorry,you are not authorized to perform this operation.")
         except LMSException as e:
             response = Util.manage_response(status=False,
-                                            message=e.detail,
+                                            message=e.message,
                                             log=str(e), logger_obj=logger)
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
@@ -173,7 +173,7 @@ class StudentDetails(APIView):
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
         except Exception as e:
             response = Util.manage_response(status=False,
-                                            message=e.detail,
+                                            message="some other issue occurred",
                                             log=str(e), logger_obj=logger)
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
