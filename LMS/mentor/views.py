@@ -109,7 +109,7 @@ class MentorProfile(APIView):
             response = Util.manage_response(status=False,
                                             message=e.message,
                                             log=e.message, logger_obj=logger)
-            return Response(response, status.HTTP_404_NOT_FOUND, content_type="application/json")
+            return Response(response, status.HTTP_401_UNAUTHORIZED, content_type="application/json")
 
         except Exception as e:
             response = Util.manage_response(status=False,
@@ -118,11 +118,11 @@ class MentorProfile(APIView):
             return Response(response, status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
     def post(self,request,**kwargs):
-        """[create User for user by taking in user details]
+        """[create mentor profile object for mentor  by taking in course and user details]
 
             :param kwargs: [mandatory]:[string]dictionary containing requesting user's id generated from decoded token
-            :param request:[mandatory]: name,email,role,phone_number of user to be created
-            :return:creation confirmation and status code.Email is sent to host email User.
+            :param request:[mandatory]: name of course and mentor's email.
+            :return:creation confirmation and status code.
         """
 
         try:
@@ -137,9 +137,10 @@ class MentorProfile(APIView):
                 raise LMSException(ExceptionType.MentorExists, "An account with this user already exists.")
             request.data["user"] = user.id
 
-            course = Course.objects.filter(name=request.data['course']).first()
+            course = Course.objects.filter(name=request.data["course"]).first()
             if not course:
                 raise Course.DoesNotExist('No such course exists')
+
             request.data["course"]=course.id
 
             request.POST._mutable = False
@@ -163,7 +164,7 @@ class MentorProfile(APIView):
             response = Util.manage_response(status=False,
                                             message=e.message,
                                             log=e.message, logger_obj=logger)
-            return Response(response, status.HTTP_404_NOT_FOUND, content_type="application/json")
+            return Response(response, status.HTTP_401_UNAUTHORIZED, content_type="application/json")
 
         except Exception as e:
             response = Util.manage_response(status=False,
@@ -174,6 +175,11 @@ class MentorProfile(APIView):
 
 
     def delete(self,request,**kwargs):
+        """[soft deletes mentor profile object for mentor  by taking in id]
+
+            :param kwargs: [mandatory]:[string]dictionary containing requesting user's id and role generated from decoded token
+            :return:deletion confirmation and status code.
+        """
         try:
             current_user_role = kwargs.get('role')
             delete_mentor = User.objects.filter(id=kwargs.get('pk')).exclude(is_deleted=True).first()
