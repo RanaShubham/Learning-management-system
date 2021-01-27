@@ -1,0 +1,10 @@
+2021-01-24 17:27:54,170  account.views  DEBUG: validated data: retrieved users
+2021-01-24 17:28:00,375  account.views  DEBUG: validated data: retrieved users
+2021-01-24 17:28:05,895  account.views  DEBUG: validated data: retrieved users
+2021-01-24 17:48:16,721  account.views  DEBUG: validated data: Logged out
+2021-01-24 17:48:39,186  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-24 17:49:19,889  account.views  DEBUG: validated data: retrieved users
+2021-01-24 17:58:29,859  account.views  DEBUG: validated data: retrieved users
+2021-01-25 06:45:34,100  account.views  ERROR: error: Error 61 connecting to localhost:6379. Connection refused.
+2021-01-25 06:47:30,991  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-25 06:47:56,008  account.views  DEBUG: validated data: retrieved users

@@ -2,8 +2,6 @@ import threading
 import random
 import string
 from django.core.mail import EmailMessage
-from django.core.mail import send_mail
-from django.template.loader import render_to_string
 
 class EmailThread(threading.Thread):
 
@@ -35,6 +33,32 @@ class Util:
         email = EmailMessage(
             subject=data['email_subject'], body=data['email_body'], to=[data['to_email']])
         EmailThread(email).start()
+
+
+    @staticmethod
+    def manage_response(**kwargs):
+        """[prepares result dictionary to be sent as response]
+
+        :param kwargs: [mandatory]:[int]response status
+                                   [string]response message
+                                   [string]log message
+                                   [object]logger object
+                       [optional]:[dict] data for successful requests
+        :return: dictionary containing result
+        """
+        result = {}
+        result['status'] = kwargs['status']
+        result['message'] = kwargs['message']
+
+        if kwargs['status'] == True:
+            if 'data' in kwargs:
+                result['data'] = kwargs['data']
+            if 'header' in kwargs:
+                result['header'] = kwargs['header']
+            kwargs['logger_obj'].debug('validated data: {}'.format(kwargs['log']))
+        else:
+            kwargs['logger_obj'].error('error: {}'.format(kwargs['log']))
+        return result
 
 
 def get_random_password():
