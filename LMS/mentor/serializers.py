@@ -14,7 +14,7 @@ class MentorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Mentor
-        #fields = '__all__'
         fields = ['course','user']
+        depth = 2
 
 
