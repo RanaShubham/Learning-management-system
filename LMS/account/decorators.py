@@ -33,7 +33,9 @@ def user_login_required(view_func):
             decoded_token = Encrypt.decode(token)
             cache_key = Cache.getInstance().get("TOKEN_"+str(decoded_token['id'])+"_AUTH")
             if cache_key and cache_key.decode("utf-8") == token:
+
                 kwargs['userid'] = decoded_token['id']
+                kwargs['role'] = decoded_token['role']
                 logger.debug('login token verified for user id: {}'.format(kwargs['userid']))
                 return view_func(request, *args , **kwargs)
             else:
