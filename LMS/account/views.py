@@ -37,9 +37,6 @@ class RegisterUser(generics.GenericAPIView):
     serializer_class = RegisterSerializer
     def get_queryset(self):
         pass
-    # authentication_classes = (TokenAuthentication, )
-    # permission_classes = (IsAuthenticated,)
-    # permission_classes = (permissions.IsAuthenticated,)
     def get(self, request, **kwargs):
         """[To get all the registered User details when logged in as admin.]
 
@@ -79,7 +76,6 @@ class RegisterUser(generics.GenericAPIView):
         try:
             requesting_user_id = kwargs.get('userid')
             requesting_user_role = User.objects.get(id=requesting_user_id).role
-            # requesting_user_role_name = Role.objects.get(role_id =  requesting_user_role_id).role_name
             if requesting_user_role.role_id != Role.objects.get(role='admin').role_id:
                 raise LMSException(ExceptionType.UnauthorizedError,"You are not authorized to perform this operation.",status.HTTP_401_UNAUTHORIZED)
 
