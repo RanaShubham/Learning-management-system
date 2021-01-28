@@ -44,13 +44,13 @@ class AdminView(APIView):
                 return Response(response, status=status.HTTP_200_OK, content_type="application/json")
 
             else:
-                raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.")
+                raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.",status.HTTP_401_UNAUTHORIZED)
 
         except LMSException as e:
             response = Util.manage_response(status=False,
                                             message=e.message,
                                             log=e.message, logger_obj=logger)
-            return Response(response, status.HTTP_404_NOT_FOUND, content_type="application/json")
+            return Response(response, e.status_code, content_type="application/json")
 
         except Exception as e:
             response = Util.manage_response(status=False,
@@ -75,7 +75,7 @@ class MentorProfile(APIView):
             current_user_role = kwargs.get('role') #role of requesting user
 
             if current_user_role != 'admin' and get_user_id != current_user_id:
-                raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.")
+                raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.",status.HTTP_401_UNAUTHORIZED)
 
             logger.info("checking for mentor with matching userid retrieved from pk")
             mentor = Mentor.objects.filter(user=get_user_id).first()
@@ -98,7 +98,7 @@ class MentorProfile(APIView):
             response = Util.manage_response(status=False,
                                             message=e.message,
                                             log=e.message, logger_obj=logger)
-            return Response(response, status.HTTP_401_UNAUTHORIZED, content_type="application/json")
+            return Response(response, e.status_code, content_type="application/json")
 
         except Exception as e:
             response = Util.manage_response(status=False,
@@ -117,15 +117,15 @@ class MentorProfile(APIView):
         try:
             current_user_role = kwargs.get('role')
             if current_user_role != 'admin':
-                raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.")
+                raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.",status.HTTP_401_UNAUTHORIZED)
 
             request.POST._mutable = True
 
-            user = User.objects.filter(email=request.data['email']).first()
+            user = User.objects.filter(email=request.data['user']).first()
             if not user:  # if user with this email isn't in database
-                raise LMSException(ExceptionType.NonExistentError, "No such user record found.")
+                raise LMSException(ExceptionType.NonExistentError, "No such user record found.",status.HTTP_404_NOT_FOUND)
             if Mentor.objects.filter(user=user.id): #if a mentor object is already existing for this user
-                raise LMSException(ExceptionType.MentorExists, "An account with this user already exists.")
+                raise LMSException(ExceptionType.MentorExists, "An account with this user already exists.",status.HTTP_400_BAD_REQUEST)
 
             request.data["user"] = user.id
 
@@ -156,7 +156,7 @@ class MentorProfile(APIView):
             response = Util.manage_response(status=False,
                                             message=e.message,
                                             log=e.message, logger_obj=logger)
-            return Response(response, status.HTTP_401_UNAUTHORIZED, content_type="application/json")
+            return Response(response, e.status_code, content_type="application/json")
 
         except Exception as e:
             response = Util.manage_response(status=False,
@@ -176,9 +176,9 @@ class MentorProfile(APIView):
             current_user_role = kwargs.get('role')
             delete_mentor = User.objects.filter(id=kwargs.get('pk')).exclude(is_deleted=True).first()
             if current_user_role != 'admin':  # if requesting user isn't admin
-                raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.")
+                raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.",status.HTTP_401_UNAUTHORIZED)
             if not delete_mentor:  # if user to be deleted isn't in database
-                raise LMSException(ExceptionType.NonExistentError, "No such user record found.")
+                raise LMSException(ExceptionType.NonExistentError, "No such user record found.",status.HTTP_404_NOT_FOUND)
 
             logger.info('deleting existing mentor with given id')
             delete_mentor.soft_delete()
@@ -192,12 +192,11 @@ class MentorProfile(APIView):
                                             message=e.message,
                                             log=e.message, logger_obj=logger)
 
-            return Response(response, status.HTTP_404_NOT_FOUND, content_type="application/json")
+            return Response(response, e.status_code, content_type="application/json")
         except Exception as e:
             response = Util.manage_response(status=False,
                                             message="Something went wrong.Please try again",
                                             log=str(e), logger_obj=logger)
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
-
 
