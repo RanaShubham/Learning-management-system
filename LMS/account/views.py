@@ -5,11 +5,12 @@ import jwt
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.encoding import force_str
-from .serializers import LoginSerializer, RegisterSerializer
+from rest_framework.permissions import IsAuthenticated
+from .serializers import *
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, generics, permissions
 from django.utils.decorators import method_decorator
 from .decorators import user_login_required
 from .models import User, Role
@@ -18,6 +19,7 @@ from services.cache import Cache
 from .utils import Util
 from rest_framework import serializers
 from LMS.utils import ExceptionType, LMSException
+from rest_framework.authentication import TokenAuthentication
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -31,8 +33,13 @@ logger.addHandler(file_handler)
 
 
 @method_decorator(user_login_required, name='dispatch')
-class RegisterUser(APIView):
-
+class RegisterUser(generics.GenericAPIView):
+    serializer_class = RegisterSerializer
+    def get_queryset(self):
+        pass
+    # authentication_classes = (TokenAuthentication, )
+    # permission_classes = (IsAuthenticated,)
+    # permission_classes = (permissions.IsAuthenticated,)
     def get(self, request, **kwargs):
         """[To get all the registered User details when logged in as admin.]
 
@@ -198,8 +205,10 @@ class RegisterUser(APIView):
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
 
-class LoginUser(APIView):
-
+class LoginUser(generics.GenericAPIView):
+    serializer_class = LoginSerializer
+    def get_queryset(self):
+        pass
     def post(self, request):
         """[gets user with matching credentials and generates authentication token using id and time]
 
@@ -264,10 +273,14 @@ class LoginUser(APIView):
                                             log=str(e), logger_obj=logger)
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
-class RequestPasswordResetEmail(APIView):
+
+
+class RequestPasswordResetEmail(generics.GenericAPIView):
     """[sends an email to facilitate password reset]
     """
-
+    serializer_class = ResetPasswordEmailRequestSerializer
+    def get_queryset(self):
+        pass
     def post(self, request, **kwargs):
         """[sends an email to facilitate password reset]
         :param request: [mandatory]:[string]:email of user
@@ -303,10 +316,14 @@ class RequestPasswordResetEmail(APIView):
                                             log=str(e), logger_obj=logger)
             return Response(response, status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
-class SetNewPassword(APIView):
+
+
+class SetNewPassword(generics.GenericAPIView):
     """[returns new password when supplied with uid,token and new password]
     """
-
+    serializer_class = SetNewPasswordSerializer
+    def get_queryset(self):
+        pass
     def patch(self, request, **kwargs):
         """[returns new password when supplied with uid,token and new password]
 
