@@ -1,0 +1,68 @@
+2021-01-24 17:58:29,843  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-25 06:47:55,986  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 11:35:12,925  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 11:35:13,648  account.decorators  ERROR: error: Invalid token type. Token must be a <class 'bytes'>
+2021-01-28 11:35:14,653  account.decorators  ERROR: error: Invalid token type. Token must be a <class 'bytes'>
+2021-01-28 11:35:15,353  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 11:35:16,825  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 11:35:17,566  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 11:35:18,842  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 11:35:19,536  account.decorators  DEBUG: login token verified for user id: 2
+2021-01-28 11:35:19,558  account.decorators  DEBUG: login token verified for user id: 2
+2021-01-28 11:35:19,571  account.decorators  DEBUG: login token verified for user id: 2
+2021-01-28 11:47:49,973  account.decorators  ERROR: error: User must be logged in
+2021-01-28 11:47:57,253  account.decorators  ERROR: error: User must be logged in
+2021-01-28 11:48:11,547  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 11:48:34,903  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 11:48:57,619  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 11:50:41,267  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 11:53:59,603  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 11:55:00,461  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 11:55:29,986  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 12:00:24,570  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 12:00:52,902  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 12:01:27,330  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 12:04:51,369  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 12:07:00,531  account.decorators  DEBUG: login token verified for user id: 3
+2021-01-28 12:07:38,434  account.decorators  DEBUG: login token verified for user id: 3
+2021-01-28 12:07:42,856  account.decorators  DEBUG: login token verified for user id: 3
+2021-01-28 12:07:50,416  account.decorators  DEBUG: login token verified for user id: 3
+2021-01-28 12:08:46,154  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 12:13:55,861  account.decorators  DEBUG: login token verified for user id: 3
+2021-01-28 12:17:20,327  account.decorators  DEBUG: login token verified for user id: 4
+2021-01-28 12:22:31,458  account.decorators  DEBUG: login token verified for user id: 4
+2021-01-28 12:22:59,214  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 12:24:42,241  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 12:24:42,978  account.decorators  ERROR: error: Invalid token type. Token must be a <class 'bytes'>
+2021-01-28 12:24:43,991  account.decorators  ERROR: error: Invalid token type. Token must be a <class 'bytes'>
+2021-01-28 12:24:44,661  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 12:24:46,063  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 12:24:46,772  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 12:24:47,905  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 12:24:48,616  account.decorators  DEBUG: login token verified for user id: 2
+2021-01-28 12:24:48,639  account.decorators  DEBUG: login token verified for user id: 2
+2021-01-28 12:24:48,654  account.decorators  DEBUG: login token verified for user id: 2
+2021-01-28 13:46:28,865  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 13:46:54,472  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 13:47:37,195  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 13:47:42,130  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 13:47:53,148  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 13:48:06,981  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 13:48:18,725  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 13:48:19,026  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 13:48:22,437  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 13:50:46,996  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 13:51:06,968  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 13:51:13,434  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 13:51:29,688  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 13:51:32,305  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 13:51:42,990  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 13:51:50,742  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 13:51:51,629  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 13:51:58,337  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 13:52:38,274  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 13:53:13,104  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 13:53:20,747  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 13:53:33,940  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 13:54:31,238  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 13:57:25,495  account.decorators  DEBUG: login token verified for user id: 1

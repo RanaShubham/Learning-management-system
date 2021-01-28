@@ -23,8 +23,8 @@ class Data(TestCase):
         """
         this method setup all the url and data which was required by all test cases
         """
-        self.admin_login_url = reverse("users:login_user")
-        self.admin_register_user = reverse("users:register_get_update_delete", kwargs={"pk":1})
+        self.admin_login_url = reverse("account:login_user")
+        self.admin_register_user = reverse("account:register_get_update_delete", kwargs={"pk":1})
         self.student_register_url = reverse("student-register")
         self.single_student_url = reverse("student-details", kwargs={"pk": 2})
 

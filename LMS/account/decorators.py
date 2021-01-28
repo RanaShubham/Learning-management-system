@@ -23,13 +23,16 @@ def user_login_required(view_func):
         try:
             token = request.META.get('HTTP_AUTHORIZATION')
             decoded_token = Encrypt.decode(token)
-            cache_key = Cache.getInstance().get("TOKEN_" + str(decoded_token['id']) + "_AUTH")
-            if cache_key is not None and cache_key.decode("utf-8") == token:
-                kwargs['userid'] = decoded_token['id']
-                return view_func(request, *args, **kwargs)
-            else:
-                result = {'status': False, 'message': 'User must be logged in'}
+            cache_key = Cache.getInstance().get("TOKEN_"+str(decoded_token['id'])+"_AUTH")
+            if cache_key and cache_key.decode("utf-8") == token:
 
+                kwargs['userid'] = decoded_token['id']
+                kwargs['role'] = decoded_token['role']
+                logger.debug('login token verified for user id: {}'.format(kwargs['userid']))
+                return view_func(request, *args , **kwargs)
+            else:
+                result = Util.manage_response(status=False, message='User must be logged in',
+                                                log='User must be logged in', logger_obj=logger)
                 HttpResponse.status_code = status.HTTP_401_UNAUTHORIZED
                 return HttpResponse(json.dumps(result), HttpResponse.status_code)
         except jwt.ExpiredSignatureError as e:

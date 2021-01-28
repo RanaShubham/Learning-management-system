@@ -3,9 +3,7 @@ import os
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import status
-
-from services.logging import loggers
+from rest_framework import status, generics
 from .serializers import StudentSerializer
 from .models import Student
 from django.utils.decorators import method_decorator
@@ -15,13 +13,22 @@ from django.db.models import Q
 from LMS.utils import *
 from account.utils import Util
 
-logger = loggers("loggers", "log_student.log")
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+formatter = logging.Formatter('%(asctime)s  %(name)s  %(levelname)s: %(message)s')
+
+file_handler = logging.FileHandler(os.path.abspath("loggers/log_students.log"))
+file_handler.setFormatter(formatter)
+
+logger.addHandler(file_handler)
 
 
 @method_decorator(user_login_required, name='dispatch')
-class StudentDetails(APIView):
+class StudentDetails(generics.GenericAPIView):
     serializer_class = StudentSerializer
-
+    def get_queryset(self):
+        pass
     def post(self, request, **kwargs):
         """
         A method to post student details
@@ -37,33 +44,39 @@ class StudentDetails(APIView):
         @return: status, message and status code
         @rtype: status: boolean, message: str
         """
+        data = {"status": False, "message": 'some other issue'}
         try:
-            user = User.objects.get(id=kwargs['userid'])
-            details = Student.objects.filter(Q(email=user.email)).first()
-            if details is None:
-                request.POST._mutable = True
-                request.data["user"] = kwargs['userid']
-                request.data['email'] = user.email
-                request.data['student_id'] = kwargs['userid']
-                request.POST._mutable = False
-                serializer = StudentSerializer(data=request.data)
-                if serializer.is_valid(raise_exception=True):
-                    serializer.save()
-                    response = Util.manage_response(status=True, message='student details added', data=serializer.data,
-                                                    log='student details added', logger_obj=logger)
-                    return Response(response, status.HTTP_201_CREATED)
-                raise LMSException(ExceptionType.UserException, 'Please enter valid details')
-            else:
-                raise LMSException(ExceptionType.StudentExist, 'student already exist')
+            if kwargs['role'] == 'student':
+                user = User.objects.get(id=kwargs['userid'])
+                details = Student.objects.filter(Q(email=user.email)).first()
+                if details is None:
+                    request.POST._mutable = True
+                    request.data["user"] = kwargs['userid']
+                    request.data['email'] = user.email
+                    request.data['student_id'] = kwargs['userid']
+                    request.POST._mutable = False
+                    serializer = StudentSerializer(data=request.data)
+                    if serializer.is_valid(raise_exception=True):
+                        serializer.save()
+                        data["status"] = True
+                        data["message"] = 'student details added'
+                        data['data'] = serializer.data
+                        response = Util.manage_response(status=True, message='student details added', data=serializer.data,
+                                                        log='student details added', logger_obj=logger)
+                        return Response(response, status.HTTP_201_CREATED)
+                    raise LMSException(ExceptionType.UserException, 'Please enter valid details')
+                else:
+                    raise LMSException(ExceptionType.StudentExist, 'student already exist')
+            raise LMSException(ExceptionType.UserException, 'you are not a student to create profile')
         except LMSException as e:
             response = Util.manage_response(status=False,
-                                            message=e.detail,
+                                            message=e.message,
                                             log=str(e), logger_obj=logger)
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
         except Exception as e:
             response = Util.manage_response(status=False,
-                                            message=e.detail,
+                                            message="some other issue occurred",
                                             log=str(e), logger_obj=logger)
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
@@ -76,6 +89,7 @@ class StudentDetails(APIView):
             Response: status , message and data
             @type: status: Boolean, message:str, data: list
         """
+        data = {"status": False, "message": 'some other issue'}
         try:
             if kwargs.get('pk'):
                 user = User.objects.get(id=kwargs['userid'])  # requesting user:admin/student
@@ -83,7 +97,7 @@ class StudentDetails(APIView):
                 student_details = Student.objects.filter(Q(email=student.email)).first()
                 if student_details is None:
                     raise LMSException(ExceptionType.StudentNotFound, 'No such student found')
-                elif student_details.email == user.email or user.role == 'admin':
+                elif student_details.email == user.email or kwargs['role'] == 'admin':
                     serializer = StudentSerializer(student_details)
                     response = Util.manage_response(status=True, message='student details retrieved',
                                                     data=serializer.data,
@@ -94,9 +108,8 @@ class StudentDetails(APIView):
                                        "Sorry,you are not authorized to perform this operation.")
             else:
                 user = User.objects.get(id=kwargs['userid'])
-                if user.role == 'admin':
+                if kwargs['role'] == 'admin':
                     student_list = Student.objects.all()
-
                     serializer = StudentSerializer(student_list, many=True)
                     response = Util.manage_response(status=True, message='student details retrieved',
                                                     data=serializer.data,
@@ -107,7 +120,7 @@ class StudentDetails(APIView):
                                        "Sorry,you are not authorized to perform this operation.")
         except LMSException as e:
             response = Util.manage_response(status=False,
-                                            message=e.detail,
+                                            message=e.message,
                                             log=str(e), logger_obj=logger)
 
             return Response(response, status.HTTP_401_UNAUTHORIZED, content_type="application/json")
@@ -119,7 +132,7 @@ class StudentDetails(APIView):
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
         except Exception as e:
             response = Util.manage_response(status=False,
-                                            message=e.detail,
+                                            message="some other issue occurred",
                                             log=str(e), logger_obj=logger)
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
@@ -135,7 +148,6 @@ class StudentDetails(APIView):
         data = {"status": False, "message": 'some other issue'}
         try:
             user = User.objects.get(id=kwargs['userid'])
-
             details = Student.objects.filter(Q(email=user.email)).first()
             if details.user_id == kwargs['pk']:
                 data = request.data
@@ -155,7 +167,7 @@ class StudentDetails(APIView):
                                    "Sorry,you are not authorized to perform this operation.")
         except LMSException as e:
             response = Util.manage_response(status=False,
-                                            message=e.detail,
+                                            message=e.message,
                                             log=str(e), logger_obj=logger)
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
@@ -167,7 +179,7 @@ class StudentDetails(APIView):
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
         except Exception as e:
             response = Util.manage_response(status=False,
-                                            message=e.detail,
+                                            message="some other issue occurred",
                                             log=str(e), logger_obj=logger)
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")

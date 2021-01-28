@@ -93,7 +93,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
-
     REQUIRED_FIELDS = ['name','phone_number']
 
     def __str__(self):
@@ -105,5 +104,5 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def soft_delete(self):
         self.is_deleted = True
-
         self.save()
+
