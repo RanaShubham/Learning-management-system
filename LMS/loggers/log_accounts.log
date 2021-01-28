@@ -37,3 +37,37 @@
 2021-01-28 11:35:19,186  account.views  DEBUG: validated data: Registered successfully.Login credentials sent.
 2021-01-28 11:35:19,527  account.views  INFO: checking existing user with given email
 2021-01-28 11:35:19,532  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-28 11:48:03,302  account.views  INFO: checking existing user with given email
+2021-01-28 11:48:03,308  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-28 11:48:47,914  account.views  INFO: checking existing user with given email
+2021-01-28 11:48:47,918  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-28 12:00:52,925  account.views  INFO: posting new user with incoming details
+2021-01-28 12:00:52,948  account.views  ERROR: error: {'email': [ErrorDetail(string='user with this email already exists.', code='unique')]}
+2021-01-28 12:05:10,431  account.views  ERROR: error: Invalid credentials, please try again
+2021-01-28 12:05:18,347  account.views  ERROR: error: Invalid credentials, please try again
+2021-01-28 12:06:13,478  account.views  INFO: checking existing user with given email
+2021-01-28 12:06:13,489  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-28 12:06:27,220  account.views  INFO: checking existing user with given email
+2021-01-28 12:06:27,225  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-28 12:08:46,172  account.views  INFO: posting new user with incoming details
+2021-01-28 12:08:46,584  account.views  DEBUG: validated data: Registered successfully.Login credentials sent.
+2021-01-28 12:09:56,299  account.views  ERROR: error: Invalid credentials, please try again
+2021-01-28 12:10:03,910  account.views  ERROR: error: Invalid credentials, please try again
+2021-01-28 12:10:23,626  account.views  INFO: checking existing user with given email
+2021-01-28 12:10:23,632  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-28 12:10:43,198  account.views  ERROR: error: Invalid credentials, please try again
+2021-01-28 12:11:16,657  account.views  ERROR: error: Invalid credentials, please try again
+2021-01-28 12:11:37,504  account.views  ERROR: error: Invalid credentials, please try again
+2021-01-28 12:12:04,242  account.views  ERROR: error: Invalid credentials, please try again
+2021-01-28 12:12:31,476  account.views  ERROR: error: Invalid credentials, please try again
+2021-01-28 12:12:33,754  account.views  ERROR: error: Invalid credentials, please try again
+2021-01-28 12:12:35,108  account.views  ERROR: error: Invalid credentials, please try again
+2021-01-28 12:13:15,940  account.views  INFO: checking existing user with given email
+2021-01-28 12:13:15,944  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-28 12:13:36,217  account.views  ERROR: error: Invalid credentials, please try again
+2021-01-28 12:14:41,119  account.views  ERROR: error: Invalid credentials, please try again
+2021-01-28 12:15:11,837  account.views  ERROR: error: Invalid credentials, please try again
+2021-01-28 12:15:15,331  account.views  ERROR: error: Invalid credentials, please try again
+2021-01-28 12:15:26,710  account.views  ERROR: error: Invalid credentials, please try again
+2021-01-28 12:16:27,314  account.views  INFO: checking existing user with given email
+2021-01-28 12:16:28,347  account.views  DEBUG: validated data: Token generated.Login successful.

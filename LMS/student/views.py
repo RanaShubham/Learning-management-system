@@ -45,26 +45,28 @@ class StudentDetails(generics.GenericAPIView):
         """
         data = {"status": False, "message": 'some other issue'}
         try:
-            user = User.objects.get(id=kwargs['userid'])
-            details = Student.objects.filter(Q(email=user.email)).first()
-            if details is None:
-                request.POST._mutable = True
-                request.data["user"] = kwargs['userid']
-                request.data['email'] = user.email
-                request.data['student_id'] = kwargs['userid']
-                request.POST._mutable = False
-                serializer = StudentSerializer(data=request.data)
-                if serializer.is_valid(raise_exception=True):
-                    serializer.save()
-                    data["status"] = True
-                    data["message"] = 'student details added'
-                    data['data'] = serializer.data
-                    response = Util.manage_response(status=True, message='student details added', data=serializer.data,
-                                                    log='student details added', logger_obj=logger)
-                    return Response(response, status.HTTP_201_CREATED)
-                raise LMSException(ExceptionType.UserException, 'Please enter valid details')
-            else:
-                raise LMSException(ExceptionType.StudentExist, 'student already exist')
+            if kwargs['role'] == 'student':
+                user = User.objects.get(id=kwargs['userid'])
+                details = Student.objects.filter(Q(email=user.email)).first()
+                if details is None:
+                    request.POST._mutable = True
+                    request.data["user"] = kwargs['userid']
+                    request.data['email'] = user.email
+                    request.data['student_id'] = kwargs['userid']
+                    request.POST._mutable = False
+                    serializer = StudentSerializer(data=request.data)
+                    if serializer.is_valid(raise_exception=True):
+                        serializer.save()
+                        data["status"] = True
+                        data["message"] = 'student details added'
+                        data['data'] = serializer.data
+                        response = Util.manage_response(status=True, message='student details added', data=serializer.data,
+                                                        log='student details added', logger_obj=logger)
+                        return Response(response, status.HTTP_201_CREATED)
+                    raise LMSException(ExceptionType.UserException, 'Please enter valid details')
+                else:
+                    raise LMSException(ExceptionType.StudentExist, 'student already exist')
+            raise LMSException(ExceptionType.UserException, 'you are not a student to create profile')
         except LMSException as e:
             response = Util.manage_response(status=False,
                                             message=e.message,
@@ -94,7 +96,7 @@ class StudentDetails(generics.GenericAPIView):
                 student_details = Student.objects.filter(Q(email=student.email)).first()
                 if student_details is None:
                     raise LMSException(ExceptionType.StudentNotFound, 'No such student found')
-                elif student_details.email == user.email or user.role == 'admin':
+                elif student_details.email == user.email or kwargs['role'] == 'admin':
                     serializer = StudentSerializer(student_details)
                     response = Util.manage_response(status=True, message='student details retrieved',
                                                     data=serializer.data,
@@ -105,7 +107,7 @@ class StudentDetails(generics.GenericAPIView):
                                        "Sorry,you are not authorized to perform this operation.")
             else:
                 user = User.objects.get(id=kwargs['userid'])
-                if user.role == 'admin':
+                if kwargs['role'] == 'admin':
                     student_list = Student.objects.all()
                     serializer = StudentSerializer(student_list, many=True)
                     response = Util.manage_response(status=True, message='student details retrieved',
