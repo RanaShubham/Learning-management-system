@@ -19,6 +19,7 @@ class LMSException(Exception):
     def __init__(self, *args):
         self.exception_type = args[0]
         self.message = args[1]
+        self.status_code = args[2]
 
     def __str__(self):
         return self.message
