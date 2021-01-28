@@ -2,6 +2,8 @@ from django.urls import re_path, path
 from .views import *
 
 urlpatterns = [
-    re_path(r'^(?P<pk>[0-9]{0,})$', AdminView.as_view(), name="admin_get"),
-    path('profile/',MentorProfile.as_view(),name="get-post"),
+    path('all',AdminView.as_view(), name='admin-get'),
+    path('get/<int:pk>',MentorProfile.as_view(),name="get-mentor"),
+    path('post',MentorProfile.as_view(),name="post"),
+    path('delete/<int:pk>',MentorProfile.as_view(),name="delete-mentor"),
 ]
