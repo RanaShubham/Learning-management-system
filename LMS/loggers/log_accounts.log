@@ -71,3 +71,36 @@
 2021-01-28 12:15:26,710  account.views  ERROR: error: Invalid credentials, please try again
 2021-01-28 12:16:27,314  account.views  INFO: checking existing user with given email
 2021-01-28 12:16:28,347  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-28 12:22:49,700  account.views  INFO: checking existing user with given email
+2021-01-28 12:22:49,716  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-28 12:24:41,209  account.views  INFO: checking existing user with given email
+2021-01-28 12:24:42,235  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-28 12:24:42,248  account.views  INFO: retrieving list of registered users
+2021-01-28 12:24:42,254  account.views  DEBUG: validated data: retrieved users
+2021-01-28 12:24:42,970  account.views  INFO: checking existing user with given email
+2021-01-28 12:24:42,975  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-28 12:24:43,649  account.views  ERROR: error: Invalid credentials, please try again
+2021-01-28 12:24:44,651  account.views  INFO: checking existing user with given email
+2021-01-28 12:24:44,657  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-28 12:24:44,676  account.views  ERROR: error: RoleError
+2021-01-28 12:24:45,360  account.views  INFO: checking existing user with given email
+2021-01-28 12:24:45,365  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-28 12:24:46,053  account.views  INFO: checking existing user with given email
+2021-01-28 12:24:46,059  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-28 12:24:46,068  account.views  INFO: updating existing user with incoming details
+2021-01-28 12:24:46,075  account.views  DEBUG: validated data: Updated user record successfully.
+2021-01-28 12:24:46,764  account.views  INFO: checking existing user with given email
+2021-01-28 12:24:46,769  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-28 12:24:46,782  account.views  INFO: posting new user with incoming details
+2021-01-28 12:24:47,128  account.views  DEBUG: validated data: Registered successfully.Login credentials sent.
+2021-01-28 12:24:47,890  account.views  INFO: checking existing user with given email
+2021-01-28 12:24:47,901  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-28 12:24:47,914  account.views  INFO: posting new user with incoming details
+2021-01-28 12:24:48,248  account.views  DEBUG: validated data: Registered successfully.Login credentials sent.
+2021-01-28 12:24:48,607  account.views  INFO: checking existing user with given email
+2021-01-28 12:24:48,612  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-28 13:45:03,001  account.views  INFO: checking existing user with given email
+2021-01-28 13:45:04,047  account.views  DEBUG: validated data: Token generated.Login successful.
+2021-01-28 13:46:28,880  account.views  ERROR: error: 'int' object has no attribute 'lower'
+2021-01-28 13:46:54,488  account.views  INFO: posting new user with incoming details
+2021-01-28 13:46:54,884  account.views  DEBUG: validated data: Registered successfully.Login credentials sent.

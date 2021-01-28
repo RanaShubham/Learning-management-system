@@ -36,6 +36,9 @@ class CourseView(generics.GenericAPIView):
     """
     serializer_class = CourseSerializer
 
+    def get_queryset(self):
+        pass
+
     def post(self, request, **kwargs):
         """
 
@@ -138,11 +141,8 @@ class CourseView(generics.GenericAPIView):
         """
         try:
             admin_role = Role.objects.filter(Q(role='admin')).first()
-            course_manager_role = Role.objects.filter(Q(role='course_manager')).first()
             if admin_role:
                 role = admin_role
-            elif course_manager_role:
-                role = course_manager_role
             else:
                 raise LMSException(ExceptionType.UserException, 'you are not authorized to perform this operation')
             user = User.objects.filter(Q(id=kwargs['userid']), (Q(role=role.role_id))).first()
@@ -178,11 +178,9 @@ class CourseView(generics.GenericAPIView):
         """
         try:
             admin_role = Role.objects.filter(Q(role='admin')).first()
-            course_manager_role = Role.objects.filter(Q(role='course_manager')).first()
             if admin_role:
                 role = admin_role
-            elif course_manager_role:
-                role = course_manager_role
+
             else:
                 raise LMSException(ExceptionType.UserException, 'you are not authorized to perform this operation')
             user = User.objects.filter(Q(id=kwargs['userid']), (Q(role=role.role_id))).first()

@@ -36,6 +36,8 @@ logger.addHandler(file_handler)
 @method_decorator(user_login_required, name='dispatch')
 class RegisterUser(generics.GenericAPIView):
     serializer_class = RegisterSerializer
+    def get_queryset(self):
+        pass
     # authentication_classes = (TokenAuthentication, )
     # permission_classes = (IsAuthenticated,)
     # permission_classes = (permissions.IsAuthenticated,)
@@ -210,7 +212,8 @@ class RegisterUser(generics.GenericAPIView):
 
 class LoginUser(generics.GenericAPIView):
     serializer_class = LoginSerializer
-
+    def get_queryset(self):
+        pass
     def post(self, request):
         """[gets user with matching credentials and generates authentication token using id and time]
 
@@ -281,7 +284,8 @@ class RequestPasswordResetEmail(generics.GenericAPIView):
     """[sends an email to facilitate password reset]
     """
     serializer_class = ResetPasswordEmailRequestSerializer
-
+    def get_queryset(self):
+        pass
     def post(self, request, **kwargs):
         """[sends an email to facilitate password reset]
         :param request: [mandatory]:[string]:email of user
@@ -323,7 +327,8 @@ class SetNewPassword(generics.GenericAPIView):
     """[returns new password when supplied with uid,token and new password]
     """
     serializer_class = SetNewPasswordSerializer
-
+    def get_queryset(self):
+        pass
     def patch(self, request, **kwargs):
         """[returns new password when supplied with uid,token and new password]
 

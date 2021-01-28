@@ -27,7 +27,8 @@ logger.addHandler(file_handler)
 @method_decorator(user_login_required, name='dispatch')
 class StudentDetails(generics.GenericAPIView):
     serializer_class = StudentSerializer
-
+    def get_queryset(self):
+        pass
     def post(self, request, **kwargs):
         """
         A method to post student details

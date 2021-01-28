@@ -27,7 +27,8 @@ logger.addHandler(file_handler)
 class AdminView(generics.GenericAPIView):
 
     serializer_class = MentorSerializer
-
+    def get_queryset(self):
+        pass
     def get(self,request,**kwargs):
         """[displays specific/all mentors' personal details and courses]
             args: kwargs[pk]: user id of the mentor
@@ -79,7 +80,8 @@ class AdminView(generics.GenericAPIView):
 class MentorProfile(generics.GenericAPIView):
 
     serializer_class = MentorSerializer
-
+    def get_queryset(self):
+        pass
     def get(self,request,**kwargs):
         """[displays mentor's personal details and courses.]
             args: kwargs[pk]: user id of the mentor
@@ -136,7 +138,7 @@ class MentorProfile(generics.GenericAPIView):
 
             request.POST._mutable = True
 
-            user = User.objects.filter(email=request.data['email']).first()
+            user = User.objects.filter(email=request.data['user']).first()
             if not user:  # if user with this email isn't in database
                 raise LMSException(ExceptionType.NonExistentError, "No such user record found.")
             if Mentor.objects.filter(user=user.id): #if a mentor object is already existing for this user
