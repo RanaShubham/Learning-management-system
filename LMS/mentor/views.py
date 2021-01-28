@@ -77,7 +77,7 @@ class AdminView(APIView):
 class MentorProfile(APIView):
 
     def get(self,request,**kwargs):
-        """[displays mentor's personal details and courses]
+        """[displays mentor's personal details and courses.]
             args: kwargs[pk]: user id of the mentor
             Returns:
                 Response: status , message and data
@@ -86,11 +86,11 @@ class MentorProfile(APIView):
         try:
             current_user_id = kwargs.get('userid')
             current_user_role = kwargs.get('role')
-            if current_user_role != 'mentor':
+            if current_user_role != 'mentor':   #only mentor is allowed access to this get view
                 raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.")
 
             mentor = Mentor.objects.filter(user=current_user_id).first()
-            if not mentor:
+            if not mentor: #if user account of mentor exists but mentor object doesn't
                 raise Mentor.DoesNotExist('No such mentor exists')
             serializer = MentorSerializer(mentor)
             response = Util.manage_response(status=True,
@@ -133,8 +133,11 @@ class MentorProfile(APIView):
             request.POST._mutable = True
 
             user = User.objects.filter(email=request.data['email']).first()
-            if Mentor.objects.filter(user=user.id):
+            if not user:  # if user with this email isn't in database
+                raise LMSException(ExceptionType.NonExistentError, "No such user record found.")
+            if Mentor.objects.filter(user=user.id): #if a mentor object is already existing for this user
                 raise LMSException(ExceptionType.MentorExists, "An account with this user already exists.")
+
             request.data["user"] = user.id
 
             course = Course.objects.filter(name=request.data["course"]).first()

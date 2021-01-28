@@ -136,7 +136,7 @@ class RegisterUser(APIView):
             if not update_user:  # if user to be updated isn't in database
                 raise LMSException(ExceptionType.NonExistentError, "No such user record found.")
 
-            if current_user_role != 'admin' and str(current_user_id) != kwargs.get('pk'):
+            if current_user_role != 'admin' and str(current_user_id) != kwargs.get('pk'): #if user is not admin and if the record id(pk) he seeks to update doesn't match his own id
                 raise LMSException(ExceptionType.UnauthorizedError,"Sorry,you are not authorized to update other user's credentials.")
 
             # If update contains 'role' update.
@@ -154,7 +154,6 @@ class RegisterUser(APIView):
             response = Util.manage_response(status=True,
                                             message='Updated successfully.',data=user_data,
                                             log='Updated user record successfully.', logger_obj=logger)
-
             return Response(response, status=status.HTTP_200_OK)
         except LMSException as e:
             response = Util.manage_response(status=False,
