@@ -1,6 +1,6 @@
 import logging,os
 from account.models import User
-from rest_framework import status
+from rest_framework import status, generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.utils.decorators import method_decorator
@@ -24,7 +24,9 @@ logger.addHandler(file_handler)
 
 
 @method_decorator(user_login_required,name='dispatch')
-class AdminView(APIView):
+class AdminView(generics.GenericAPIView):
+
+    serializer_class = MentorSerializer
 
     def get(self,request,**kwargs):
         """[displays specific/all mentors' personal details and courses]
@@ -74,7 +76,9 @@ class AdminView(APIView):
 
 
 @method_decorator(user_login_required,name='dispatch')
-class MentorProfile(APIView):
+class MentorProfile(generics.GenericAPIView):
+
+    serializer_class = MentorSerializer
 
     def get(self,request,**kwargs):
         """[displays mentor's personal details and courses.]

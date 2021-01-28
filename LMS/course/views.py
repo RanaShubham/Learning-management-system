@@ -5,7 +5,7 @@ from django.shortcuts import render
 
 # Create your views here.
 
-from rest_framework import status
+from rest_framework import status, generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -30,7 +30,7 @@ logger.addHandler(file_handler)
 
 
 @method_decorator(user_login_required, name='dispatch')
-class CourseView(APIView):
+class CourseView(generics.GenericAPIView):
     """
     Created a class to perform crud operations for the course which is taken by students
     """

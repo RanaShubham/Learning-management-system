@@ -1,2 +1,12 @@
 2021-01-24 17:58:29,843  account.decorators  DEBUG: login token verified for user id: 1
 2021-01-25 06:47:55,986  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 11:35:12,925  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 11:35:13,648  account.decorators  ERROR: error: Invalid token type. Token must be a <class 'bytes'>
+2021-01-28 11:35:14,653  account.decorators  ERROR: error: Invalid token type. Token must be a <class 'bytes'>
+2021-01-28 11:35:15,353  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 11:35:16,825  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 11:35:17,566  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 11:35:18,842  account.decorators  DEBUG: login token verified for user id: 1
+2021-01-28 11:35:19,536  account.decorators  DEBUG: login token verified for user id: 2
+2021-01-28 11:35:19,558  account.decorators  DEBUG: login token verified for user id: 2
+2021-01-28 11:35:19,571  account.decorators  DEBUG: login token verified for user id: 2

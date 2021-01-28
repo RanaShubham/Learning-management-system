@@ -3,7 +3,7 @@ import os
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import status
+from rest_framework import status, generics
 from .serializers import StudentSerializer
 from .models import Student
 from django.utils.decorators import method_decorator
@@ -25,7 +25,7 @@ logger.addHandler(file_handler)
 
 
 @method_decorator(user_login_required, name='dispatch')
-class StudentDetails(APIView):
+class StudentDetails(generics.GenericAPIView):
     serializer_class = StudentSerializer
 
     def post(self, request, **kwargs):
