@@ -27,7 +27,7 @@ logger.addHandler(file_handler)
 class AdminView(APIView):
 
     def get(self,request,**kwargs):
-        """[displays specific/all mentors' personal details and courses]
+        """[displays all mentors' personal details and courses]
             args: kwargs[pk]: user id of the mentor
             Returns:
                 Response: status , message and data
@@ -36,19 +36,6 @@ class AdminView(APIView):
         try:
             current_user_id = kwargs.get('userid')
             if User.objects.get(id=current_user_id).role.__str__() == "admin":
-                if(kwargs.get('pk')):
-                    logger.info("checking for mentor with matching userid retrieved from pk")
-                    mentor_user = User.objects.filter(id=kwargs.get('pk')).first()
-                    #if not mentor_user or mentor_user.role.__ne__('mentor'):
-                    if not mentor_user or mentor_user.role.__str__() != 'mentor':
-                        raise LMSException(ExceptionType.NonExistentError,"Sorry,no mentor with this id exists.")
-                    mentor=Mentor.objects.filter(user=kwargs.get('pk')).first()
-                    serializer = MentorSerializer(mentor)
-                    response = Util.manage_response(status=True,
-                                                    message="Retrieved mentor", data=serializer.data,
-                                                    log="Retrieved mentor with id {}".format(kwargs.get('pk')), logger_obj=logger)
-                    return Response(response, status=status.HTTP_200_OK, content_type="application/json")
-
                 mentors = Mentor.objects.all()
                 serializer = MentorSerializer(mentors,many=True)
                 response = Util.manage_response(status=True,
@@ -72,7 +59,6 @@ class AdminView(APIView):
             return Response(response, status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
 
-
 @method_decorator(user_login_required,name='dispatch')
 class MentorProfile(APIView):
 
@@ -84,12 +70,15 @@ class MentorProfile(APIView):
                 @type: status: Boolean, message:str, data: list
         """
         try:
-            current_user_id = kwargs.get('userid')
-            current_user_role = kwargs.get('role')
-            if current_user_role != 'mentor':   #only mentor is allowed access to this get view
+            get_user_id = kwargs.get('pk') #id whose details the requesting user[admin/mentor] is seeking
+            current_user_id = kwargs.get('userid') #id of requesting user
+            current_user_role = kwargs.get('role') #role of requesting user
+
+            if current_user_role != 'admin' and get_user_id != current_user_id:
                 raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.")
 
-            mentor = Mentor.objects.filter(user=current_user_id).first()
+            logger.info("checking for mentor with matching userid retrieved from pk")
+            mentor = Mentor.objects.filter(user=get_user_id).first()
             if not mentor: #if user account of mentor exists but mentor object doesn't
                 raise Mentor.DoesNotExist('No such mentor exists')
             serializer = MentorSerializer(mentor)
