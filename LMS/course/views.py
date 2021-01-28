@@ -13,16 +13,9 @@ from LMS.utils import LMSException, ExceptionType
 from account.utils import Util
 from course.models import Course
 from course.serializers import CourseSerializer
+from services.logging import loggers
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-formatter = logging.Formatter('%(asctime)s  %(name)s  %(levelname)s: %(message)s')
-
-file_handler = logging.FileHandler(os.path.abspath("loggers/log_course.log"))
-file_handler.setFormatter(formatter)
-
-logger.addHandler(file_handler)
+logger = loggers("loggers", "log_course.log")
 
 
 class CourseView(APIView):

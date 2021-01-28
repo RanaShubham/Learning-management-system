@@ -6,6 +6,7 @@ import jwt
 from django.urls import reverse
 from django.utils.encoding import force_str
 
+from services.logging import loggers
 from .serializers import LoginSerializer, RegisterSerializer
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.views import APIView
@@ -20,16 +21,7 @@ from .utils import Util
 from rest_framework import serializers
 from LMS.utils import ExceptionType, LMSException
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-formatter = logging.Formatter('%(asctime)s  %(name)s  %(levelname)s: %(message)s')
-
-file_handler = logging.FileHandler(os.path.abspath("loggers/log_accounts.log"))
-file_handler.setFormatter(formatter)
-
-logger.addHandler(file_handler)
-
+logger = loggers("loggers", "log_accounts.log")
 
 @method_decorator(user_login_required, name='dispatch')
 class RegisterUser(APIView):
