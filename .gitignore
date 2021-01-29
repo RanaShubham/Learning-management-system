@@ -27,3 +27,4 @@ Learning-management-system/LMS/dump.rdb
 Learning-management-system/LMS/.coveragerc
 Learning-management-system/LMS/htmlcov
 Learning-management-system/LMS/.coverage
+*loggers*
