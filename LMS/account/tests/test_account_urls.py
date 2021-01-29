@@ -3,10 +3,16 @@ from django.urls import reverse, resolve
 
 class TestUrls:
     def test_register_url(self):
-        print('hi'*50)
-        path = reverse("account:register_get_update_delete", kwargs={'pk':''})
-        print(path, "path here")
-        assert resolve(path).view_name == "account:register_get_update_delete"
+        path = reverse("account:post_user")
+        assert resolve(path).view_name == "account:post_user"
+
+    def test_get_url(self):
+        path = reverse("account:get_users")
+        assert resolve(path).view_name == "account:get_users"
+
+    def test_update_url(self):
+        path = reverse("account:update_delete_user", kwargs={'pk':1})
+        assert resolve(path).view_name == "account:update_delete_user"
 
     def test_login_url(self):
         path = reverse("account:login_user")

@@ -20,9 +20,10 @@ class Data(TestCase):
         this method setup all the url and data which was required by all test cases
         """
         User.objects.create_superuser(name="admin", email="admin@email.com", phone_number="1234567890", password="adminpass")
-        self.register_url = reverse("account:register_get_update_delete", kwargs={'pk':''})
+        self.register_url = reverse("account:post_user")
+        self.get_url = reverse("account:get_users")
         self.login_url = reverse("account:login_user")
-        self.patch_url = reverse("account:register_get_update_delete", kwargs={'pk':'1'})
+        self.patch_url = reverse("account:update_delete_user", kwargs={'pk':'1'})
         self.admin_data = {'email': "admin@email.com", 'password': "adminpass"}
         self.valid_registration_data = {'name': "adam",
                                         'role': "admin",
@@ -56,7 +57,7 @@ class Data(TestCase):
         response = self.client.post(self.login_url, self.admin_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         Authorization= response.get('HTTP_AUTHORIZATION')
-        response = self.client.get(self.register_url, HTTP_AUTHORIZATION = Authorization,format='json')
+        response = self.client.get(self.get_url, HTTP_AUTHORIZATION = Authorization,format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
     def test_patch_demo(self):
         client = APIClient()
@@ -79,7 +80,7 @@ class Data(TestCase):
     def test_invalid_get_returns_400_BAD_REQUEST(self):
         response = self.client.post(self.login_url, self.admin_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response = self.client.get(self.register_url, format='json')
+        response = self.client.get(self.get_url, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
     def test_invalid_patch_(self):
         client = APIClient()
