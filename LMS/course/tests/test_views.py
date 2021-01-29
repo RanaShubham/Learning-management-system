@@ -62,6 +62,9 @@ class CourseDetailsTest(Data):
         response = client.patch(self.single_course_url, self.valid_patch_data, HTTP_AUTHORIZATION=headers,
                                 format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response = client.delete(self.single_course_url, HTTP_AUTHORIZATION=headers,
+                                format='json')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_course_with_invalid_details(self):
         response = self.client.post(self.admin_login_url, self.admin_login_data, format='application/json')
