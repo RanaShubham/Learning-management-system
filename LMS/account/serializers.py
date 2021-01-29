@@ -2,8 +2,7 @@ from django.contrib import auth
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
-
-from .models import User
+from .models import User, Role
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
@@ -69,32 +68,13 @@ class SetNewPasswordSerializer(serializers.Serializer):
     """
     password = serializers.CharField(
         min_length=6, max_length=68, write_only=True)
-    token = serializers.CharField(
-        min_length=1, write_only=True)
-    uidb64 = serializers.CharField(
-        min_length=1, write_only=True)
 
     class Meta:
-        fields = ['password', 'token', 'uidb64']
+        fields = ['password']
 
-    def validate(self, attrs):
-        """
-        it take new password and confirm password and if the password matches all criteria then it will set new password
-        :rtype: data of the user and its success status
-        """
-        try:
-            password = attrs.get('password')
-            token = attrs.get('token')
-            uidb64 = attrs.get('uidb64')
 
-            id = force_str(urlsafe_base64_decode(uidb64))
-            user = User.objects.get(id=id)
-            if not PasswordResetTokenGenerator().check_token(user, token):
-                raise LMSException(ExceptionType.UnAuthorized, "The reset link is invalid")
+class RoleSerializer(ModelSerializer):
+    class Meta:
+        model = Role
+        fields = ['role_id', 'role']
 
-            user.set_password(password)
-            user.save()
-
-            return user
-        except Exception as e:
-            raise LMSException(ExceptionType.UnauthorizedError, "The reset link is invalid")
