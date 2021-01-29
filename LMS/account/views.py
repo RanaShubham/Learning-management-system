@@ -1,15 +1,11 @@
 import datetime
-
-
+import logging
+import os
 import jwt
-
 from django.urls import reverse
-
-
 from services.logging import loggers
 from .serializers import *
 from rest_framework.exceptions import AuthenticationFailed
-
 from rest_framework.response import Response
 from rest_framework import status, generics
 from django.utils.decorators import method_decorator
@@ -21,16 +17,15 @@ from .utils import Util
 from rest_framework import serializers
 from LMS.utils import ExceptionType, LMSException
 
-
-logger = loggers("loggers","log_accounts.log")
+logger = loggers("loggers", "log_accounts.log")
 
 
 @method_decorator(user_login_required, name='dispatch')
 class RegisterUser(generics.GenericAPIView):
     serializer_class = RegisterSerializer
 
-    def get_queryset(self):
-        pass
+    queryset = User.objects.all()
+
 
     def get(self, request, **kwargs):
         """[To get all the registered User details when logged in as admin.]
@@ -41,7 +36,8 @@ class RegisterUser(generics.GenericAPIView):
         try:
             current_user_id = kwargs.get('userid')
             if User.objects.get(id=current_user_id).role.role_id != Role.objects.get(role='admin').role_id:
-                raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.")
+                raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.",
+                                   status.HTTP_401_UNAUTHORIZED)
 
             logger.info('retrieving list of registered users')
             users = User.objects.filter(is_deleted=False)
@@ -53,7 +49,7 @@ class RegisterUser(generics.GenericAPIView):
             response = Util.manage_response(status=False,
                                             message=e.message,
                                             log=e.message, logger_obj=logger)
-            return Response(response, status.HTTP_404_NOT_FOUND, content_type="application/json")
+            return Response(response, e.status_code, content_type="application/json")
         except Exception as e:
             response = Util.manage_response(status=False,
                                             message="Something went wrong.Please try again",
@@ -72,14 +68,16 @@ class RegisterUser(generics.GenericAPIView):
             requesting_user_id = kwargs.get('userid')
             requesting_user_role = User.objects.get(id=requesting_user_id).role
             if requesting_user_role.role_id != Role.objects.get(role='admin').role_id:
-                raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.")
+                raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.",
+                                   status.HTTP_401_UNAUTHORIZED)
 
             normalized_admission_role = request.data['role'].lower()
 
             admission_role_obj = Role.objects.filter(role=normalized_admission_role).first()
 
             if not admission_role_obj:
-                raise LMSException(ExceptionType.RoleError, "{} is not a valid role.".format(normalized_admission_role))
+                raise LMSException(ExceptionType.RoleError, "{} is not a valid role.".format(normalized_admission_role),
+                                   status.HTTP_400_BAD_REQUEST)
 
             request.POST._mutable = True
             request.data['role'] = admission_role_obj.pk
@@ -103,7 +101,7 @@ class RegisterUser(generics.GenericAPIView):
             response = Util.manage_response(status=False,
                                             message=e.message,
                                             log=e.message, logger_obj=logger)
-            return Response(response, status.HTTP_404_NOT_FOUND, content_type="application/json")
+            return Response(response, e.status_code, content_type="application/json")
 
         except serializers.ValidationError as e:
             response = Util.manage_response(status=False,
@@ -130,20 +128,20 @@ class RegisterUser(generics.GenericAPIView):
             current_user_role = kwargs.get('role')
             update_user = User.objects.filter(id=kwargs.get('pk')).exclude(is_deleted=True).first()
             if not update_user:  # if user to be updated isn't in database
-                raise LMSException(ExceptionType.NonExistentError, "No such user record found.")
+                raise LMSException(ExceptionType.NonExistentError, "No such user record found.",
+                                   status.HTTP_404_NOT_FOUND)
 
             if current_user_role != 'admin' and str(current_user_id) != kwargs.get(
                     'pk'):  # if user is not admin and if the record id(pk) he seeks to update doesn't match his own id
                 raise LMSException(ExceptionType.UnauthorizedError,
-                                   "Sorry,you are not authorized to update other user's credentials.")
+                                   "Sorry,you are not authorized to update other user's credentials.",
+                                   status.HTTP_401_UNAUTHORIZED)
 
-            # If update contains 'role' update.
             if request.data.get('role'):
-                normalized_admission_role = request.data.get('role').lower()
-                admission_role_obj = Role.objects.filter(role=normalized_admission_role).first()
-                request.POST._mutable = True
-                request.data['role'] = admission_role_obj.pk
-                request.POST._mutable = False
+                raise LMSException(ExceptionType.UnauthorizedError,
+                                   "Sorry,you are not authorized to update role.Please contact admin.",
+                                   status.HTTP_401_UNAUTHORIZED)
+
             logger.info('updating existing user with incoming details')
             serializer = RegisterSerializer(update_user, data=request.data, partial=True)
             if serializer.is_valid(raise_exception=True):
@@ -157,7 +155,7 @@ class RegisterUser(generics.GenericAPIView):
             response = Util.manage_response(status=False,
                                             message=e.message,
                                             log=e.message, logger_obj=logger)
-            return Response(response, status.HTTP_404_NOT_FOUND, content_type="application/json")
+            return Response(response, e.status_code, content_type="application/json")
         except Exception as e:
             response = Util.manage_response(status=False,
                                             message="Something went wrong.Please try again",
@@ -174,10 +172,12 @@ class RegisterUser(generics.GenericAPIView):
         try:
             current_user_id = kwargs['userid']
             if User.objects.get(id=current_user_id).role.role_id != Role.objects.get(role='admin').role_id:
-                raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.")
+                raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.",
+                                   status.HTTP_401_UNAUTHORIZED)
 
             if not User.objects.filter(id=pk).exclude(is_deleted=True).exists():
-                raise LMSException(ExceptionType.NonExistentError, "Requested user does not exist")
+                raise LMSException(ExceptionType.NonExistentError, "Requested user does not exist",
+                                   status.HTTP_404_NOT_FOUND)
             else:
                 logger.info('deleting existing user with given id')
                 user = User.objects.get(id=pk)
@@ -192,7 +192,7 @@ class RegisterUser(generics.GenericAPIView):
                                             message=e.message,
                                             log=e.message, logger_obj=logger)
 
-            return Response(response, status.HTTP_404_NOT_FOUND, content_type="application/json")
+            return Response(response, e.status_code, content_type="application/json")
         except Exception as e:
             response = Util.manage_response(status=False,
                                             message="Something went wrong.Please try again",
@@ -204,8 +204,7 @@ class RegisterUser(generics.GenericAPIView):
 class LoginUser(generics.GenericAPIView):
     serializer_class = LoginSerializer
 
-    def get_queryset(self):
-        pass
+
 
     def post(self, request):
         """[gets user with matching credentials and generates authentication token using id and time]
@@ -277,8 +276,7 @@ class RequestPasswordResetEmail(generics.GenericAPIView):
     """
     serializer_class = ResetPasswordEmailRequestSerializer
 
-    def get_queryset(self):
-        pass
+
 
     def post(self, request, **kwargs):
         """[sends an email to facilitate password reset]
@@ -321,8 +319,6 @@ class SetNewPassword(generics.GenericAPIView):
     """
     serializer_class = SetNewPasswordSerializer
 
-    def get_queryset(self):
-        pass
 
     def patch(self, request, **kwargs):
         """[returns new password when supplied with uid,token and new password]
@@ -336,12 +332,15 @@ class SetNewPassword(generics.GenericAPIView):
             id = Encrypt.decode(token).get('id')
             cached_reset_token = force_str(Cache.getInstance().get("RESET_" + str(id) + "_TOKEN"))
             if cached_reset_token == 'None':
-                raise LMSException(ExceptionType.UnauthorizedError, "reset password url is expired.")
+                raise LMSException(ExceptionType.UnauthorizedError, "reset password url is expired.",
+                                   status.HTTP_401_UNAUTHORIZED)
             if cached_reset_token != token:
-                raise LMSException(ExceptionType.UnauthorizedError, "reset password url is invalid.")
+                raise LMSException(ExceptionType.UnauthorizedError, "reset password url is invalid.",
+                                   status.HTTP_400_BAD_REQUEST)
             if not password or len(password) <= 2:
                 raise LMSException(ExceptionType.UserException,
-                                   "Please provide a appropirate password with atleast 3 character.")
+                                   "Please provide a appropirate password with atleast 3 character.",
+                                   status.HTTP_400_BAD_REQUEST)
             logger.info("checking for user matching id retrieved from token")
             user = User.objects.get(id=id)
             user.set_password(password)
@@ -360,7 +359,7 @@ class SetNewPassword(generics.GenericAPIView):
             response = Util.manage_response(status=False,
                                             message=e.message,
                                             log=e.message, logger_obj=logger)
-            return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
+            return Response(response, e.status_code, content_type="application/json")
         except Exception as e:
             response = Util.manage_response(status=False,
                                             message="Something went wrong.Please try again",

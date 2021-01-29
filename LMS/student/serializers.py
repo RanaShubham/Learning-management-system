@@ -12,8 +12,8 @@ class StudentSerializer(serializers.ModelSerializer):
     """
     this class is used for serialization and deserialization of student details
     """
+    student_id = serializers.IntegerField(required=False)
 
     class Meta:
         model = Student
         fields = '__all__'
-

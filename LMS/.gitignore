@@ -10,11 +10,8 @@ userReg/
 *htmlcov*
 .env
 *coverage*
-venv/
-LMS/student/dummy_data.py
 !*__init__.py*
-*_initial.py
 *_auto_*
 *loggers*
+.pytest_cache
 *dump.rdb*
-*.coveragerc
