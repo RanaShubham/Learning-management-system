@@ -7,7 +7,6 @@ from django.shortcuts import render
 
 from rest_framework import status, generics
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from LMS.utils import LMSException, ExceptionType
 from account.utils import Util
@@ -17,16 +16,9 @@ from account.models import User, Role
 from django.db.models import Q
 from django.utils.decorators import method_decorator
 from account.decorators import user_login_required
+from services.logging import loggers
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-formatter = logging.Formatter('%(asctime)s  %(name)s  %(levelname)s: %(message)s')
-
-file_handler = logging.FileHandler(os.path.abspath("loggers/log_course.log"))
-file_handler.setFormatter(formatter)
-
-logger.addHandler(file_handler)
+logger = loggers("loggers","log_course.log")
 
 
 @method_decorator(user_login_required, name='dispatch')
@@ -180,7 +172,6 @@ class CourseView(generics.GenericAPIView):
             admin_role = Role.objects.filter(Q(role='admin')).first()
             if admin_role:
                 role = admin_role
-
             else:
                 raise LMSException(ExceptionType.UserException, 'you are not authorized to perform this operation')
             user = User.objects.filter(Q(id=kwargs['userid']), (Q(role=role.role_id))).first()

@@ -1,4 +1,4 @@
-import logging,os
+import logging, os
 from account.models import User
 from rest_framework import status, generics
 from rest_framework.response import Response
@@ -7,29 +7,22 @@ from django.utils.decorators import method_decorator
 from account.decorators import user_login_required
 from account.utils import Util
 from course.models import Course
+from services.logging import loggers
 from .models import Mentor
 from .serializers import MentorSerializer
 from LMS.utils import ExceptionType, LMSException
 
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-formatter = logging.Formatter('%(asctime)s  %(name)s  %(levelname)s: %(message)s')
-
-file_handler = logging.FileHandler(os.path.abspath("loggers/log_mentors.log"))
-file_handler.setFormatter(formatter)
-
-logger.addHandler(file_handler)
+logger = loggers("loggers","log_mentors.log")
 
 
-@method_decorator(user_login_required,name='dispatch')
+@method_decorator(user_login_required, name='dispatch')
 class AdminView(generics.GenericAPIView):
-
     serializer_class = MentorSerializer
+
     def get_queryset(self):
         pass
-    def get(self,request,**kwargs):
+
+    def get(self, request, **kwargs):
         """[displays specific/all mentors' personal details and courses]
             args: kwargs[pk]: user id of the mentor
             Returns:
@@ -39,23 +32,24 @@ class AdminView(generics.GenericAPIView):
         try:
             current_user_id = kwargs.get('userid')
             if User.objects.get(id=current_user_id).role.__str__() == "admin":
-                if(kwargs.get('pk')):
+                if (kwargs.get('pk')):
                     logger.info("checking for mentor with matching userid retrieved from pk")
                     mentor_user = User.objects.filter(id=kwargs.get('pk')).first()
-                    #if not mentor_user or mentor_user.role.__ne__('mentor'):
+                    # if not mentor_user or mentor_user.role.__ne__('mentor'):
                     if not mentor_user or mentor_user.role.__str__() != 'mentor':
-                        raise LMSException(ExceptionType.NonExistentError,"Sorry,no mentor with this id exists.")
-                    mentor=Mentor.objects.filter(user=kwargs.get('pk')).first()
+                        raise LMSException(ExceptionType.NonExistentError, "Sorry,no mentor with this id exists.")
+                    mentor = Mentor.objects.filter(user=kwargs.get('pk')).first()
                     serializer = MentorSerializer(mentor)
                     response = Util.manage_response(status=True,
                                                     message="Retrieved mentor", data=serializer.data,
-                                                    log="Retrieved mentor with id {}".format(kwargs.get('pk')), logger_obj=logger)
+                                                    log="Retrieved mentor with id {}".format(kwargs.get('pk')),
+                                                    logger_obj=logger)
                     return Response(response, status=status.HTTP_200_OK, content_type="application/json")
 
                 mentors = Mentor.objects.all()
-                serializer = MentorSerializer(mentors,many=True)
+                serializer = MentorSerializer(mentors, many=True)
                 response = Util.manage_response(status=True,
-                                                message="Retrieved list of mentors",data=serializer.data,
+                                                message="Retrieved list of mentors", data=serializer.data,
                                                 log="Retrieved list of mentors", logger_obj=logger)
                 return Response(response, status=status.HTTP_200_OK, content_type="application/json")
 
@@ -75,14 +69,14 @@ class AdminView(generics.GenericAPIView):
             return Response(response, status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
 
-
-@method_decorator(user_login_required,name='dispatch')
+@method_decorator(user_login_required, name='dispatch')
 class MentorProfile(generics.GenericAPIView):
-
     serializer_class = MentorSerializer
+
     def get_queryset(self):
         pass
-    def get(self,request,**kwargs):
+
+    def get(self, request, **kwargs):
         """[displays mentor's personal details and courses.]
             args: kwargs[pk]: user id of the mentor
             Returns:
@@ -92,11 +86,11 @@ class MentorProfile(generics.GenericAPIView):
         try:
             current_user_id = kwargs.get('userid')
             current_user_role = kwargs.get('role')
-            if current_user_role != 'mentor':   #only mentor is allowed access to this get view
+            if current_user_role != 'mentor':  # only mentor is allowed access to this get view
                 raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.")
 
             mentor = Mentor.objects.filter(user=current_user_id).first()
-            if not mentor: #if user account of mentor exists but mentor object doesn't
+            if not mentor:  # if user account of mentor exists but mentor object doesn't
                 raise Mentor.DoesNotExist('No such mentor exists')
             serializer = MentorSerializer(mentor)
             response = Util.manage_response(status=True,
@@ -123,7 +117,7 @@ class MentorProfile(generics.GenericAPIView):
                                             log=str(e), logger_obj=logger)
             return Response(response, status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
-    def post(self,request,**kwargs):
+    def post(self, request, **kwargs):
         """[create mentor profile object for mentor  by taking in course and user details]
 
             :param kwargs: [mandatory]:[string]dictionary containing requesting user's id generated from decoded token
@@ -141,7 +135,7 @@ class MentorProfile(generics.GenericAPIView):
             user = User.objects.filter(email=request.data['user']).first()
             if not user:  # if user with this email isn't in database
                 raise LMSException(ExceptionType.NonExistentError, "No such user record found.")
-            if Mentor.objects.filter(user=user.id): #if a mentor object is already existing for this user
+            if Mentor.objects.filter(user=user.id):  # if a mentor object is already existing for this user
                 raise LMSException(ExceptionType.MentorExists, "An account with this user already exists.")
 
             request.data["user"] = user.id
@@ -150,7 +144,7 @@ class MentorProfile(generics.GenericAPIView):
             if not course:
                 raise Course.DoesNotExist('No such course exists')
 
-            request.data["course"]=course.id
+            request.data["course"] = course.id
 
             request.POST._mutable = False
 
@@ -158,7 +152,7 @@ class MentorProfile(generics.GenericAPIView):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             response = Util.manage_response(status=True,
-                                            message='Profile details added successfully.',data=serializer.data,
+                                            message='Profile details added successfully.', data=serializer.data,
                                             log='Profile details added successfully.', logger_obj=logger)
             return Response(response, status=status.HTTP_200_OK)
 
@@ -182,8 +176,7 @@ class MentorProfile(generics.GenericAPIView):
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
-
-    def delete(self,request,**kwargs):
+    def delete(self, request, **kwargs):
         """[soft deletes mentor profile object for mentor  by taking in id]
 
             :param kwargs: [mandatory]:[string]dictionary containing requesting user's id and role generated from decoded token
@@ -216,5 +209,3 @@ class MentorProfile(generics.GenericAPIView):
                                             log=str(e), logger_obj=logger)
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
-
-

@@ -4,6 +4,8 @@ import os
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status, generics
+
+from services.logging import loggers
 from .serializers import StudentSerializer
 from .models import Student
 from django.utils.decorators import method_decorator
@@ -13,22 +15,16 @@ from django.db.models import Q
 from LMS.utils import *
 from account.utils import Util
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-formatter = logging.Formatter('%(asctime)s  %(name)s  %(levelname)s: %(message)s')
-
-file_handler = logging.FileHandler(os.path.abspath("loggers/log_students.log"))
-file_handler.setFormatter(formatter)
-
-logger.addHandler(file_handler)
+logger = loggers("loggers","log_students.log")
 
 
 @method_decorator(user_login_required, name='dispatch')
 class StudentDetails(generics.GenericAPIView):
     serializer_class = StudentSerializer
+
     def get_queryset(self):
         pass
+
     def post(self, request, **kwargs):
         """
         A method to post student details
@@ -44,7 +40,6 @@ class StudentDetails(generics.GenericAPIView):
         @return: status, message and status code
         @rtype: status: boolean, message: str
         """
-        data = {"status": False, "message": 'some other issue'}
         try:
             if kwargs['role'] == 'student':
                 user = User.objects.get(id=kwargs['userid'])
@@ -58,10 +53,8 @@ class StudentDetails(generics.GenericAPIView):
                     serializer = StudentSerializer(data=request.data)
                     if serializer.is_valid(raise_exception=True):
                         serializer.save()
-                        data["status"] = True
-                        data["message"] = 'student details added'
-                        data['data'] = serializer.data
-                        response = Util.manage_response(status=True, message='student details added', data=serializer.data,
+                        response = Util.manage_response(status=True, message='student details added',
+                                                        data=serializer.data,
                                                         log='student details added', logger_obj=logger)
                         return Response(response, status.HTTP_201_CREATED)
                     raise LMSException(ExceptionType.UserException, 'Please enter valid details')
@@ -89,7 +82,6 @@ class StudentDetails(generics.GenericAPIView):
             Response: status , message and data
             @type: status: Boolean, message:str, data: list
         """
-        data = {"status": False, "message": 'some other issue'}
         try:
             if kwargs.get('pk'):
                 user = User.objects.get(id=kwargs['userid'])  # requesting user:admin/student
@@ -107,7 +99,6 @@ class StudentDetails(generics.GenericAPIView):
                     raise LMSException(ExceptionType.UserException,
                                        "Sorry,you are not authorized to perform this operation.")
             else:
-                user = User.objects.get(id=kwargs['userid'])
                 if kwargs['role'] == 'admin':
                     student_list = Student.objects.all()
                     serializer = StudentSerializer(student_list, many=True)
@@ -145,7 +136,6 @@ class StudentDetails(generics.GenericAPIView):
             Response: status , message and data
             @type: status: Boolean, message:str, data: list
         """
-        data = {"status": False, "message": 'some other issue'}
         try:
             user = User.objects.get(id=kwargs['userid'])
             details = Student.objects.filter(Q(email=user.email)).first()
