@@ -65,12 +65,14 @@ class Data(TestCase):
         Authorization= response.get('HTTP_AUTHORIZATION')
         response = self.client.post(self.register_url, self.valid_registration_data, HTTP_AUTHORIZATION = Authorization,format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
     def test_get_demo(self):
         response = self.client.post(self.login_url, self.admin_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         Authorization= response.get('HTTP_AUTHORIZATION')
         response = self.client.get(self.get_url, HTTP_AUTHORIZATION = Authorization,format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
     def test_patch_demo(self):
         client = APIClient()
         response = self.client.post(self.login_url, self.admin_data, format='json')
@@ -90,17 +92,20 @@ class Data(TestCase):
     def test_invalid_login_admin_returns_401_UNAUTHORIZED(self):
         response = self.client.post(self.login_url, self.invalid_login_data_invalid_credentials, format='json')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED) 
-    def test_invalid_register_returns_400_BAD_REQUEST(self):        
+
+    def test_invalid_register_returns_400_BAD_REQUEST(self):
         response = self.client.post(self.login_url, self.admin_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         Authorization= response.get('HTTP_AUTHORIZATION')
         response = self.client.post(self.register_url, self.invalid_register_data, HTTP_AUTHORIZATION = Authorization, format='json')#HTTP_AUTHORIZATION = Authorization
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_invalid_get_returns_400_BAD_REQUEST(self):
         response = self.client.post(self.login_url, self.admin_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response = self.client.get(self.get_url, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_invalid_patch_(self):
         client = APIClient()
         response = client.patch(self.patch_url, self.valid_patch_data, format='json')
