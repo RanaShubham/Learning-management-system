@@ -27,8 +27,7 @@ logger.addHandler(file_handler)
 class AdminView(generics.GenericAPIView):
 
     serializer_class = MentorSerializer
-    def get_queryset(self):
-        pass
+    queryset = User.objects.all()
     def get(self,request,**kwargs):
         """[displays all mentors' personal details and courses]
             args: kwargs[pk]: user id of the mentor
@@ -57,7 +56,7 @@ class AdminView(generics.GenericAPIView):
 
         except Exception as e:
             response = Util.manage_response(status=False,
-                                            message=str(e),
+                                            message='Something went wrong.Please try again.',
                                             log=str(e), logger_obj=logger)
             return Response(response, status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
@@ -66,8 +65,7 @@ class AdminView(generics.GenericAPIView):
 class MentorProfile(generics.GenericAPIView):
 
     serializer_class = MentorSerializer
-    def get_queryset(self):
-        pass
+    queryset = User.objects.all()
     def get(self,request,**kwargs):
         """[displays mentor's personal details and courses.]
             args: kwargs[pk]: user id of the mentor
@@ -98,7 +96,7 @@ class MentorProfile(generics.GenericAPIView):
                                             message="Requested mentor profile does not exist",
                                             log=str(e), logger_obj=logger)
 
-            return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
+            return Response(response, status.HTTP_404_NOT_FOUND, content_type="application/json")
 
         except LMSException as e:
             response = Util.manage_response(status=False,
@@ -108,68 +106,10 @@ class MentorProfile(generics.GenericAPIView):
 
         except Exception as e:
             response = Util.manage_response(status=False,
-                                            message=str(e),
+                                            message='Something went wrong.Please try again.',
                                             log=str(e), logger_obj=logger)
             return Response(response, status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
-    def post(self,request,**kwargs):
-        """[create mentor profile object for mentor  by taking in course and user details]
-
-            :param kwargs: [mandatory]:[string]dictionary containing requesting user's id generated from decoded token
-            :param request:[mandatory]: name of course and mentor's email.
-            :return:creation confirmation and status code.
-        """
-
-        try:
-            current_user_role = kwargs.get('role')
-            if current_user_role != 'admin':
-                raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.",status.HTTP_401_UNAUTHORIZED)
-
-            request.POST._mutable = True
-
-            user = User.objects.filter(email=request.data['user']).first()
-            if not user:  # if user with this email isn't in database
-                raise LMSException(ExceptionType.NonExistentError, "No such user record found.",status.HTTP_404_NOT_FOUND)
-            if Mentor.objects.filter(user=user.id): #if a mentor object is already existing for this user
-                raise LMSException(ExceptionType.MentorExists, "An account with this user already exists.",status.HTTP_400_BAD_REQUEST)
-
-            request.data["user"] = user.id
-
-            course = Course.objects.filter(name=request.data["course"]).first()
-            if not course:
-                raise Course.DoesNotExist('No such course exists')
-
-            request.data["course"]=course.id
-
-            request.POST._mutable = False
-
-            serializer = MentorSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            response = Util.manage_response(status=True,
-                                            message='Profile details added successfully.',data=serializer.data,
-                                            log='Profile details added successfully.', logger_obj=logger)
-            return Response(response, status=status.HTTP_200_OK)
-
-        except Course.DoesNotExist as e:
-            response = Util.manage_response(status=False,
-                                            message="Requested course does not exist",
-                                            log=str(e), logger_obj=logger)
-
-            return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
-
-        except LMSException as e:
-            response = Util.manage_response(status=False,
-                                            message=e.message,
-                                            log=e.message, logger_obj=logger)
-            return Response(response, e.status_code, content_type="application/json")
-
-        except Exception as e:
-            response = Util.manage_response(status=False,
-                                            message="Something went wrong.Please try again",
-                                            log=str(e), logger_obj=logger)
-
-            return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
 
     def delete(self,request,**kwargs):
@@ -206,3 +146,67 @@ class MentorProfile(generics.GenericAPIView):
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
+@method_decorator(user_login_required, name='dispatch')
+class CreateMentor(generics.GenericAPIView):
+
+    serializer_class = MentorSerializer
+    queryset = User.objects.all()
+
+    def post(self,request,**kwargs):
+        """[create mentor profile object for mentor  by taking in course and user details]
+
+            :param kwargs: [mandatory]:[string]dictionary containing requesting user's id generated from decoded token
+            :param request:[mandatory]: name of course and mentor's email.
+            :return:creation confirmation and status code.
+        """
+
+        try:
+            current_user_role = kwargs.get('role')
+            if current_user_role != 'admin':
+                raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.",status.HTTP_401_UNAUTHORIZED)
+
+            request.POST._mutable = True
+            user = User.objects.filter(email=request.data['user']).first()
+
+            if not user:  # if user with this email isn't in database
+                raise LMSException(ExceptionType.NonExistentError, "No such user record found.",status.HTTP_404_NOT_FOUND)
+            if Mentor.objects.filter(user=user.id): #if a mentor object is already existing for this user
+                raise LMSException(ExceptionType.MentorExists, "An account with this user already exists.",status.HTTP_400_BAD_REQUEST)
+
+            request.data["user"] = user.id
+
+            course = Course.objects.filter(name=request.data["course"]).first()
+            if not course:
+                raise Course.DoesNotExist('No such course exists')
+
+            request.data["course"]=course.id
+
+            request.POST._mutable = False
+
+            serializer = MentorSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            response = Util.manage_response(status=True,
+                                            message='Profile details added successfully.',data=serializer.data,
+                                            log='Profile details added successfully.', logger_obj=logger)
+            return Response(response, status=status.HTTP_201_CREATED)
+
+        except Course.DoesNotExist as e:
+            response = Util.manage_response(status=False,
+                                            message="Requested course does not exist",
+                                            log=str(e), logger_obj=logger)
+
+            return Response(response, status.HTTP_404_NOT_FOUND, content_type="application/json")
+
+        except LMSException as e:
+            response = Util.manage_response(status=False,
+                                            message=e.message,
+                                            log=e.message, logger_obj=logger)
+            return Response(response, e.status_code, content_type="application/json")
+
+        except Exception as e:
+            response = Util.manage_response(status=False,
+                                            message="Something went wrong.Please try again",
+                                            log=str(e), logger_obj=logger)
+
+            return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
