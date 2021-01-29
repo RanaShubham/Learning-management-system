@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'mentor',
     'rest_framework.authtoken',
     'course',
+    'performance_info',
 ]
 
 MIDDLEWARE = [
@@ -82,16 +83,6 @@ WSGI_APPLICATION = 'LMS.wsgi.application'
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
-
-# Database
-# https://docs.djangoproject.com/en/3.1/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -144,4 +135,15 @@ SWAGGER_SETTINGS = {
             'name': 'Authorization'
         }
     },
+}
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'LMSdb',
+        'USER': 'ubuntu',
+        'PASSWORD': 'ubuntu',
+        'HOST': 'ec2-65-0-132-251.ap-south-1.compute.amazonaws.com',
+        'POST': '',
+    }
 }

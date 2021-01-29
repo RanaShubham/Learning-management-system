@@ -1,25 +1,26 @@
 import datetime
 import logging
 import os
+
 import jwt
 from django.shortcuts import redirect
 from django.urls import reverse
-from django.utils.encoding import force_str
-from rest_framework.permissions import IsAuthenticated
-from .serializers import *
-from rest_framework.exceptions import AuthenticationFailed
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status, generics, permissions
 from django.utils.decorators import method_decorator
-from .decorators import user_login_required
-from .models import User, Role
-from services.encrypt import Encrypt
-from services.cache import Cache
-from .utils import Util
-from rest_framework import serializers
+from django.utils.encoding import force_str
 from LMS.utils import ExceptionType, LMSException
+from rest_framework import generics, permissions, serializers, status
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from services.cache import Cache
+from services.encrypt import Encrypt
+
+from .decorators import user_login_required
+from .models import Role, User
+from .serializers import *
+from .utils import Util
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
