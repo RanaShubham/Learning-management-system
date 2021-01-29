@@ -10,7 +10,7 @@ userReg/
 *dummy_data.py*
 *htmlcov*
 *coverage*
-*migrations*
+
 !*__init__.py*
 *_initial.py
 *_auto_*
