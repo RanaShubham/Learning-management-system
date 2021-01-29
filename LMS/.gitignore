@@ -17,5 +17,5 @@ userReg/
 dump.rdb
 .pytest_cache
 venv/
-*loggers*
+loggers/
 *dump.rdb*
