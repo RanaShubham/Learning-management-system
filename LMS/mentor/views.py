@@ -153,10 +153,10 @@ class CreateMentor(generics.GenericAPIView):
     queryset = User.objects.all()
 
     def post(self,request,**kwargs):
-        """[create mentor profile object for mentor  by taking in course and user details]
+        """[create mentor profile object for mentor  by taking in course id and user email]
 
             :param kwargs: [mandatory]:[string]dictionary containing requesting user's id generated from decoded token
-            :param request:[mandatory]: name of course and mentor's email.
+            :param request:[mandatory]: id of course and mentor's email.
             :return:creation confirmation and status code.
         """
 
@@ -164,23 +164,17 @@ class CreateMentor(generics.GenericAPIView):
             current_user_role = kwargs.get('role')
             if current_user_role != 'admin':
                 raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.",status.HTTP_401_UNAUTHORIZED)
+            course = Course.objects.filter(id=request.data["course"]).first()
+            if not course:
+                raise Course.DoesNotExist('No such course exists')
 
             request.POST._mutable = True
             user = User.objects.filter(email=request.data['user']).first()
-
             if not user:  # if user with this email isn't in database
                 raise LMSException(ExceptionType.NonExistentError, "No such user record found.",status.HTTP_404_NOT_FOUND)
             if Mentor.objects.filter(user=user.id): #if a mentor object is already existing for this user
                 raise LMSException(ExceptionType.MentorExists, "An account with this user already exists.",status.HTTP_400_BAD_REQUEST)
-
             request.data["user"] = user.id
-
-            course = Course.objects.filter(name=request.data["course"]).first()
-            if not course:
-                raise Course.DoesNotExist('No such course exists')
-
-            request.data["course"]=course.id
-
             request.POST._mutable = False
 
             serializer = MentorSerializer(data=request.data)
@@ -210,3 +204,5 @@ class CreateMentor(generics.GenericAPIView):
                                             log=str(e), logger_obj=logger)
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
+
+
