@@ -1,22 +1,14 @@
-
-import json,jwt,os
+import json, jwt, os
 import logging
+
+from services.logging import loggers
 from .utils import Util
 from django.http import HttpResponse
 from rest_framework import status
 from services.cache import Cache
 from services.encrypt import Encrypt
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-formatter = logging.Formatter('%(asctime)s  %(name)s  %(levelname)s: %(message)s')
-
-file_handler = logging.FileHandler(os.path.abspath("loggers/log_decorators.log"))
-file_handler.setFormatter(formatter)
-
-logger.addHandler(file_handler)
-
+logger = loggers("loggers", "log_decorators.log")
 
 
 def user_login_required(view_func):

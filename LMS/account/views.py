@@ -162,14 +162,12 @@ class RegisterUser(generics.GenericAPIView):
         """
 
         try:
-            requesting_user_id = kwargs.get('userid')
-            requesting_user_role = User.objects.get(id=requesting_user_id).role
-            if requesting_user_role.role_id != Role.objects.get(role='admin').role_id:
+            current_user_role = kwargs.get('role')
+            if current_user_role != 'admin':
                 raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.",
                                    status.HTTP_401_UNAUTHORIZED)
 
             normalized_admission_role = request.data['role'].lower()
-
             admission_role_obj = Role.objects.filter(role=normalized_admission_role).first()
 
             if not admission_role_obj:
@@ -330,7 +328,7 @@ class RequestPasswordResetEmail(generics.GenericAPIView):
 
 
 class SetNewPassword(generics.GenericAPIView):
-    """[returns new password when supplied with uid,token and new password]
+    """[returns new password when supplied with new password]
     """
     serializer_class = SetNewPasswordSerializer
     queryset = User.objects.all()
