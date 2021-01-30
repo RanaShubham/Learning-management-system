@@ -139,11 +139,11 @@ SWAGGER_SETTINGS = {
 
 DATABASES = {
     'default': {
-        'ENGINE': config('DATABASE_ENGINE'),
-        'NAME': config('DATABASE_NAME'),
-        'USER': config('DATABASE_USER'),
-        'PASSWORD': config('DATABASE_PASSWORD'),
-        'HOST': config('DATABASE_HOST'),
+        'ENGINE': config('DB_ENGINE'),
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST'),
         'POST': '',
     }
 }

@@ -6,7 +6,7 @@ from mentor.models import Mentor
 
 # Create your models here.
 class PerformanceInfo(models.Model):
-    student_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name="Student_ID", null=False, blank=False)
+    student_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name="Student_ID", null=False, blank=False)#FIXME: Link to student instead of User.
     #TODO: Add Student name in response.
     course_id = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="Course_ID", null=False, blank=False)
     #TODO: Add Course name in response.
