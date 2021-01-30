@@ -225,7 +225,7 @@ class LoginUser(generics.GenericAPIView):
             serializer = LoginSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             logger.info('checking existing user with given email')
-            user = User.objects.get(email=serializer.data['email'])
+            user = User.objects.filter(email=serializer.data['email']).first()
             current_time = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
             token = Encrypt.encode(user.id,user.role.role, current_time)
             Cache.getInstance().set("TOKEN_" + str(user.id) + "_AUTH", token)
@@ -236,12 +236,6 @@ class LoginUser(generics.GenericAPIView):
             response = Response(result, status=status.HTTP_200_OK, content_type="application/json")
             response.__setitem__(header="HTTP_AUTHORIZATION", value=token)
             return response
-        except User.DoesNotExist as e:
-            response = Util.manage_response(status=False,
-                                            message="User does not exist",
-                                            log=str(e), logger_obj=logger)
-
-            return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
         except AuthenticationFailed as e:
             response = Util.manage_response(status=False,
                                             message="Invalid credentials",
@@ -306,6 +300,7 @@ class RequestPasswordResetEmail(generics.GenericAPIView):
                 token = force_str(Encrypt.encode_reset(user.id, current_time))
                 Cache.getInstance().set("RESET_" + str(user.id) + "_TOKEN", token)
                 redirect_url = reverse('account:reset_password', kwargs={'reset_token': token})
+                Cache.getInstance().set("REDIRECT_"+ str(user.id) + "_URL",redirect_url)  #caching url for testing
                 url = request.build_absolute_uri(redirect_url)
                 email_body = 'Hello, please click on the link below and enter new password when asked for\n' + url
                 data = {'email_body': email_body, 'to_email': user.email, 'email_subject': 'Reset your passsword'}
@@ -377,7 +372,7 @@ class SetNewPassword(generics.GenericAPIView):
 
 @method_decorator(user_login_required, name='dispatch')
 class CreateRole(generics.GenericAPIView):
-    serializer_class = RegisterSerializer
+    serializer_class = RoleSerializer
     queryset = User.objects.all()
     def post(self, request, **kwargs):
         """[create role taking in role id and role name]
@@ -393,6 +388,10 @@ class CreateRole(generics.GenericAPIView):
                                    "Sorry,you are not authorized to update other user's credentials.",
                                    status.HTTP_401_UNAUTHORIZED)
             logger.info("creating new role with incoming role details")
+            request.POST._mutable = True
+            normalized_admission_role = request.data['role'].lower()
+            request.data['role'] = normalized_admission_role
+            request.POST._mutable = False
             serializer = RoleSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
@@ -411,3 +410,33 @@ class CreateRole(generics.GenericAPIView):
                                             message="Something went wrong.Please try again",
                                             log=str(e), logger_obj=logger)
             return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR,content_type="application/json")
+
+
+    def get(self, request, **kwargs):
+        """[To get all the role details when logged in as admin.]
+
+                :param kwargs: [mandatory]:[string]dictionary containing requesting user's id generated from decoded token
+                :return:Response with status of success and data if successful.
+                """
+        try:
+            current_user_role = kwargs.get('role')
+            if current_user_role != 'admin':
+                raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.",
+                                   status.HTTP_401_UNAUTHORIZED)
+
+            logger.info('retrieving list of roles')
+            roles = Role.objects.all()
+            serializer = RoleSerializer(roles, many=True)
+            response = Util.manage_response(status=True, message='Retrieved all roles.', data=serializer.data,
+                                            log='retrieved roles', logger_obj=logger)
+            return Response(response, status=status.HTTP_200_OK)
+        except LMSException as e:
+            response = Util.manage_response(status=False,
+                                            message=e.message,
+                                            log=e.message, logger_obj=logger)
+            return Response(response, e.status_code, content_type="application/json")
+        except Exception as e:
+            response = Util.manage_response(status=False,
+                                            message="Something went wrong.Please try again",
+                                            log=str(e), logger_obj=logger)
+            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
