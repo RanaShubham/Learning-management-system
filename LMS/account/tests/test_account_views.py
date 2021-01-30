@@ -104,12 +104,53 @@ class Data(TestCase):
                                     format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_invalid_register_with_non_admin_credentials_returns_401_UNAUTHORIZED(self):
+        response = self.client.post(self.login_url, self.admin_data, format='json')
+        Authorization1= response.get('HTTP_AUTHORIZATION')
+        self.client.post(self.post_role_url, self.role_data, HTTP_AUTHORIZATION=Authorization1, format='json')
+        self.client.post(self.register_url, self.valid_registration_data, HTTP_AUTHORIZATION = Authorization1, format='json')
+        self.mentor_data['password'] = Cache.getInstance().get("TOKEN_password_AUTH").decode('utf-8')
+        response = self.client.post(self.login_url, self.mentor_data, format='json')
+        Authorization2 = response.get('HTTP_AUTHORIZATION')
+        response=self.client.post(self.register_url, self.valid_registration_data, HTTP_AUTHORIZATION = Authorization2, format='json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_invalid_register_with_no_role_returns_400_BAD_REQUEST(self):
+        response = self.client.post(self.login_url, self.admin_data, format='json')
+        Authorization1= response.get('HTTP_AUTHORIZATION')
+        response=self.client.post(self.register_url, self.invalid_registration_data1, HTTP_AUTHORIZATION = Authorization1, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_invalid_register_with_no_name_returns_400_BAD_REQUEST(self):
+        response = self.client.post(self.login_url, self.admin_data, format='json')
+        Authorization1= response.get('HTTP_AUTHORIZATION')
+        response=self.client.post(self.register_url, self.invalid_registration_data2, HTTP_AUTHORIZATION = Authorization1, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_get_demo(self):
         response = self.client.post(self.login_url, self.admin_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         Authorization= response.get('HTTP_AUTHORIZATION')
         response = self.client.get(self.get_url, HTTP_AUTHORIZATION = Authorization,format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_users_with_non_admin_credentials_returns_401_UNAUTHORIZED(self):
+        response = self.client.post(self.login_url, self.admin_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        Authorization= response.get('HTTP_AUTHORIZATION')
+        self.client.post(self.post_role_url, self.role_data, HTTP_AUTHORIZATION=Authorization, format='json')
+        self.client.post(self.register_url, self.valid_registration_data, HTTP_AUTHORIZATION = Authorization, format='json')
+        self.mentor_data['password'] = Cache.getInstance().get("TOKEN_password_AUTH").decode('utf-8')
+        response = self.client.post(self.login_url, self.mentor_data, format='json')
+        Authorization = response.get('HTTP_AUTHORIZATION')
+        response = self.client.get(self.get_url, HTTP_AUTHORIZATION=Authorization, format='json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_invalid_get_returns_400_BAD_REQUEST(self):
+        response = self.client.post(self.login_url, self.admin_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response = self.client.get(self.get_url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_admin_get_roles(self):
         response = self.client.post(self.login_url, self.admin_data, format='json')
@@ -201,47 +242,6 @@ class Data(TestCase):
         Authorization1 = response.get('HTTP_AUTHORIZATION')
         response = self.client.delete(self.invalid_patch_url, HTTP_AUTHORIZATION=Authorization1, format='json')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-    def test_get_users_with_non_admin_credentials_returns_401_UNAUTHORIZED(self):
-        response = self.client.post(self.login_url, self.admin_data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        Authorization= response.get('HTTP_AUTHORIZATION')
-        self.client.post(self.post_role_url, self.role_data, HTTP_AUTHORIZATION=Authorization, format='json')
-        self.client.post(self.register_url, self.valid_registration_data, HTTP_AUTHORIZATION = Authorization, format='json')
-        self.mentor_data['password'] = Cache.getInstance().get("TOKEN_password_AUTH").decode('utf-8')
-        response = self.client.post(self.login_url, self.mentor_data, format='json')
-        Authorization = response.get('HTTP_AUTHORIZATION')
-        response = self.client.get(self.get_url, HTTP_AUTHORIZATION=Authorization, format='json')
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-    def test_post_user_with_non_admin_credentials_returns_401_UNAUTHORIZED(self):
-        response = self.client.post(self.login_url, self.admin_data, format='json')
-        Authorization1= response.get('HTTP_AUTHORIZATION')
-        self.client.post(self.post_role_url, self.role_data, HTTP_AUTHORIZATION=Authorization1, format='json')
-        self.client.post(self.register_url, self.valid_registration_data, HTTP_AUTHORIZATION = Authorization1, format='json')
-        self.mentor_data['password'] = Cache.getInstance().get("TOKEN_password_AUTH").decode('utf-8')
-        response = self.client.post(self.login_url, self.mentor_data, format='json')
-        Authorization2 = response.get('HTTP_AUTHORIZATION')
-        response=self.client.post(self.register_url, self.valid_registration_data, HTTP_AUTHORIZATION = Authorization2, format='json')
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-    def test_post_user_with_no_role_returns_400_BAD_REQUEST(self):
-        response = self.client.post(self.login_url, self.admin_data, format='json')
-        Authorization1= response.get('HTTP_AUTHORIZATION')
-        response=self.client.post(self.register_url, self.invalid_registration_data1, HTTP_AUTHORIZATION = Authorization1, format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_post_user_with_no_name_returns_400_BAD_REQUEST(self):
-        response = self.client.post(self.login_url, self.admin_data, format='json')
-        Authorization1= response.get('HTTP_AUTHORIZATION')
-        response=self.client.post(self.register_url, self.invalid_registration_data2, HTTP_AUTHORIZATION = Authorization1, format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_invalid_get_returns_400_BAD_REQUEST(self):
-        response = self.client.post(self.login_url, self.admin_data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response = self.client.get(self.get_url, format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_invalid_token_returns_400_BAD_REQUEST(self):  # DECODE ERROR
         response = self.client.post(self.login_url, self.admin_data, format='json')
