@@ -1,25 +1,22 @@
-import logging
-import os
 
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework import status, generics
-
-from services.logging import loggers
-from .serializers import StudentSerializer
-from .models import Student
+from django.db.models import Q
 from django.utils.decorators import method_decorator
+from rest_framework import status, generics
+from rest_framework.response import Response
+
+from LMS.utils import *
 from account.decorators import user_login_required
 from account.models import User
-from django.db.models import Q
-from LMS.utils import *
 from account.utils import Util
+from services.logging import loggers
+from .models import Student
+from .serializers import StudentSerializer
 
 logger = loggers("loggers", "log_students.log")
 
 
 @method_decorator(user_login_required, name='dispatch')
-class StudentsDetails(generics.GenericAPIView):
+class StudentsDetailsRegister(generics.GenericAPIView):
     serializer_class = StudentSerializer
     queryset = Student.objects.all()
 
@@ -73,6 +70,12 @@ class StudentsDetails(generics.GenericAPIView):
                                             log=str(e), logger_obj=logger)
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
+
+
+@method_decorator(user_login_required, name='dispatch')
+class StudentsDetails(generics.GenericAPIView):
+    serializer_class = StudentSerializer
+    queryset = Student.objects.all()
 
     def get(self, request, **kwargs):
         """

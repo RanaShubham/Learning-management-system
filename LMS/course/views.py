@@ -22,9 +22,8 @@ from services.logging import loggers
 
 logger = loggers("loggers", "log_course.log")
 
-
 @method_decorator(user_login_required, name='dispatch')
-class CoursesView(generics.GenericAPIView):
+class CourseRegisterView(generics.GenericAPIView):
     """
     Created a class to perform crud operations for the course which is taken by students
     """
@@ -75,6 +74,15 @@ class CoursesView(generics.GenericAPIView):
             response = Util.manage_response(status=False, message='Something went wrong. Please try again',
                                             log=str(e), logger_obj=logger)
             return Response(response, status.HTTP_400_BAD_REQUEST)
+
+
+@method_decorator(user_login_required, name='dispatch')
+class CoursesView(generics.GenericAPIView):
+    """
+    Created a class to perform crud operations for the course which is taken by students
+    """
+    serializer_class = CourseSerializer
+    queryset = Course.objects.all()
 
     def get(self, request, **kwargs):
         try:

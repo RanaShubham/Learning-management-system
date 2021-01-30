@@ -2,8 +2,7 @@ from django.contrib import auth
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
-
-from .models import User
+from .models import User, Role
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
@@ -71,5 +70,11 @@ class SetNewPasswordSerializer(serializers.Serializer):
         min_length=6, max_length=68, write_only=True)
 
     class Meta:
-        fields = ['password', 'token', 'uidb64']
+        fields = ['password']
+
+
+class RoleSerializer(ModelSerializer):
+    class Meta:
+        model = Role
+        fields = ['role_id', 'role']
 
