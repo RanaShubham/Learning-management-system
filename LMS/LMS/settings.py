@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'mentor',
     'rest_framework.authtoken',
     'course',
+    'performance_info'
 ]
 
 MIDDLEWARE = [
