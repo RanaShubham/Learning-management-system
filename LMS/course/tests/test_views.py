@@ -59,6 +59,11 @@ class CourseDetailsTest(Data):
         response = self.client.get(self.single_course_url, HTTP_AUTHORIZATION=headers, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+        response = self.client.get(self.single_course_url, HTTP_AUTHORIZATION=headers, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = self.client.get(self.course_register_url, HTTP_AUTHORIZATION=headers, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response = client.patch(self.single_course_url, self.valid_patch_data, HTTP_AUTHORIZATION=headers,
                                 format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)

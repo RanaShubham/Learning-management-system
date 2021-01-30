@@ -71,13 +71,13 @@ class Data(TestCase):
                                              password='adminpassword')
 
         role = Role.objects.create(role_id=2, role='student')
-
         response = self.client.post(self.admin_login_url, self.admin_login_data, format='application/json')
-        headers = response.__getitem__(header="HTTP_AUTHORIZATION")
-        self.client.post(self.admin_register_user, self.admin_register_user_data, HTTP_AUTHORIZATION=headers,
+        self.admin_headers = response.__getitem__(header="HTTP_AUTHORIZATION")
+        self.client.post(self.admin_register_user, self.admin_register_user_data, HTTP_AUTHORIZATION=self.admin_headers,
                          format='application/json ')
         password = Cache.getInstance().get("TOKEN_" + "password" + "_AUTH").decode("utf-8")
         self.student_login_data['password'] = password
+
 
 
 class StudentDetailsTest(Data):
@@ -86,6 +86,7 @@ class StudentDetailsTest(Data):
 
         response = self.client.post(self.admin_login_url, self.student_login_data, format='application/json')
         headers = response.__getitem__(header="HTTP_AUTHORIZATION")
+
         response = self.client.post(self.student_register_url, self.valid_student_form, HTTP_AUTHORIZATION=headers,
                                     format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -93,13 +94,18 @@ class StudentDetailsTest(Data):
         response = self.client.get(self.single_student_url, HTTP_AUTHORIZATION=headers, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+        response = self.client.get(self.student_register_url, HTTP_AUTHORIZATION=self.admin_headers, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
         response = client.patch(self.single_student_url, self.valid_patch_data, HTTP_AUTHORIZATION=headers,
                                 format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_student_with_invalid_details(self):
+
         response = self.client.post(self.admin_login_url, self.student_login_data, format='application/json')
         headers = response.__getitem__(header="HTTP_AUTHORIZATION")
+
         response = self.client.post(self.student_register_url, self.invalid_student_form, HTTP_AUTHORIZATION=headers,
                                     format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
