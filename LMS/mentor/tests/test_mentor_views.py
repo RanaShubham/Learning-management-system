@@ -1,10 +1,8 @@
 from django.urls import reverse
 from rest_framework import status
-import pytest,json
+import pytest
 from django.test import TestCase
 from django.contrib.auth import get_user_model
-from rest_framework.test import APIClient
-from LMS.utils import LMSException, ExceptionType
 from services.cache import Cache
 
 User = get_user_model()
@@ -38,23 +36,25 @@ class Data(TestCase):
                            'password':""}
 
         self.role_data = {'role_id':2,
-            'role':"mentor"
-        }
+                          'role':"mentor"
+                         }
 
         self.valid_mentor_registration_data = {'name': "mentorZ",
-                                        'role': "mentor",
-                                        'email': "mentorZ@gmail.com",
-                                        'phone_number': '123456789'
-                                        }
+                                                'role': "mentor",
+                                                'email': "mentorZ@gmail.com",
+                                                'phone_number': '123456789'
+                                                }
         self.course_data = {'name':"Python",
-                                  'price':3456.78,
-                                  'duration':"3 months",
-                                  'description':"Python for beginners"
-                                 }
+                            'price':3456.78,
+                            'duration':"3 months",
+                            'description':"Python for beginners"
+                           }
+
         self.valid_mentor_data = {'user': "mentorZ@gmail.com",
-                                    'course': 1}
+                                  'course': 1}
+
         self.invalid_mentor_data = {'user': "mentorZ@gmail.com",
-                                  'course': 4}
+                                    'course': 4}
 
 
     def test_admin_get_all_users(self):
@@ -64,7 +64,7 @@ class Data(TestCase):
         response = self.client.get(self.get_mentors_url, HTTP_AUTHORIZATION = Authorization,format='json' )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_get_post_delete_mentor(self):
+    def test_valid_get_post_delete_mentor(self):
         response = self.client.post(self.login_url, self.admin_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         Authorization = response.get('HTTP_AUTHORIZATION')
@@ -81,6 +81,30 @@ class Data(TestCase):
         response = self.client.delete(self.get_delete_mentor_url, HTTP_AUTHORIZATION=Authorization, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    def test_invalid_get_id_returns_404_NOT_FOUND(self):
+        response = self.client.post(self.login_url, self.admin_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        Authorization = response.get('HTTP_AUTHORIZATION')
+
+        response = self.client.get(self.get_delete_mentor_url, HTTP_AUTHORIZATION=Authorization,
+                                   format='json')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_invalid_get_all_or_specific_mentor_with_mentor_credentials_should_return_401_UNAUTHORIZED(self):
+        response = self.client.post(self.login_url, self.admin_data, format='json')
+        Authorization = response.get('HTTP_AUTHORIZATION')
+        self.client.post(self.post_role_url, self.role_data,HTTP_AUTHORIZATION=Authorization, format='json')
+        self.client.post(self.post_course_url, self.course_data,HTTP_AUTHORIZATION=Authorization, format='json')
+        self.client.post(self.register_url, self.valid_mentor_registration_data,HTTP_AUTHORIZATION=Authorization,format='json')
+        self.client.post(self.post_mentor_url, self.valid_mentor_data,HTTP_AUTHORIZATION=Authorization, format='json')
+        self.mentor_data['password']= Cache.getInstance().get("TOKEN_password_AUTH").decode('utf-8')
+        response = self.client.post(self.mentor_login_url, self.mentor_data, format='json')
+        Authorization = response.get('HTTP_AUTHORIZATION')
+        response = self.client.get(self.get_mentors_url, HTTP_AUTHORIZATION=Authorization, format='json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        response = self.client.get(self.invalid_get_delete_mentor_url, HTTP_AUTHORIZATION=Authorization, format='json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_post_mentor_for_non_existent_mentor_returns_404_NOT_FOUND(self):
         response = self.client.post(self.login_url, self.admin_data, format='json')
@@ -108,25 +132,7 @@ class Data(TestCase):
                                     format='json')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_invalid_get_id_returns_404_NOT_FOUND(self):
-        response = self.client.post(self.login_url, self.admin_data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        Authorization = response.get('HTTP_AUTHORIZATION')
-
-        response = self.client.get(self.get_delete_mentor_url, HTTP_AUTHORIZATION=Authorization,
-                                    format='json')
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-    def test_invalid_delete_id_returns_404_NOT_FOUND(self):
-        response = self.client.post(self.login_url, self.admin_data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        Authorization = response.get('HTTP_AUTHORIZATION')
-        response = self.client.get(self.get_delete_mentor_url, HTTP_AUTHORIZATION=Authorization,
-                                    format='json')
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-    def test_invalid_with_mentor_credentials_post_new_mentor_should_return_401_UNAUTHORIZED(self):
+    def test_invalid_post_new_mentor_with_mentor_credentials_should_return_401_UNAUTHORIZED(self):
         response = self.client.post(self.login_url, self.admin_data, format='json')
         Authorization = response.get('HTTP_AUTHORIZATION')
         self.client.post(self.post_role_url, self.role_data,HTTP_AUTHORIZATION=Authorization, format='json')
@@ -151,21 +157,6 @@ class Data(TestCase):
         response=self.client.post(self.post_mentor_url, self.valid_mentor_data,HTTP_AUTHORIZATION=Authorization, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_invalid_with_mentor_credentials_get_all_or_specific_mentor_should_return_401_UNAUTHORIZED(self):
-        response = self.client.post(self.login_url, self.admin_data, format='json')
-        Authorization = response.get('HTTP_AUTHORIZATION')
-        self.client.post(self.post_role_url, self.role_data,HTTP_AUTHORIZATION=Authorization, format='json')
-        self.client.post(self.post_course_url, self.course_data,HTTP_AUTHORIZATION=Authorization, format='json')
-        self.client.post(self.register_url, self.valid_mentor_registration_data,HTTP_AUTHORIZATION=Authorization,format='json')
-        self.client.post(self.post_mentor_url, self.valid_mentor_data,HTTP_AUTHORIZATION=Authorization, format='json')
-        self.mentor_data['password']= Cache.getInstance().get("TOKEN_password_AUTH").decode('utf-8')
-        response = self.client.post(self.mentor_login_url, self.mentor_data, format='json')
-        Authorization = response.get('HTTP_AUTHORIZATION')
-        response = self.client.get(self.get_mentors_url, HTTP_AUTHORIZATION=Authorization, format='json')
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-        response = self.client.get(self.invalid_get_delete_mentor_url, HTTP_AUTHORIZATION=Authorization, format='json')
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
     def test_invalid_delete_with_wrong_id_should_return_404_NOT_FOUND(self):
         response = self.client.post(self.login_url, self.admin_data, format='json')
         Authorization = response.get('HTTP_AUTHORIZATION')
@@ -185,3 +176,11 @@ class Data(TestCase):
         Authorization = response.get('HTTP_AUTHORIZATION')
         response = self.client.delete(self.get_delete_mentor_url, HTTP_AUTHORIZATION=Authorization, format='json')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_invalid_delete_id_returns_404_NOT_FOUND(self):
+        response = self.client.post(self.login_url, self.admin_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        Authorization = response.get('HTTP_AUTHORIZATION')
+        response = self.client.get(self.get_delete_mentor_url, HTTP_AUTHORIZATION=Authorization,
+                                    format='json')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
