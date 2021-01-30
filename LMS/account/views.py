@@ -89,6 +89,7 @@ class RegisterUser(generics.GenericAPIView):
 
             request.POST._mutable = True
             request.data['role'] = admission_role_obj.pk
+            request.data['name'] = request.data.get('name').lower().capitalize()
             request.POST._mutable = False
             logger.info('posting new user with incoming details')
             serializer = RegisterSerializer(data=request.data)

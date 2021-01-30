@@ -139,11 +139,11 @@ SWAGGER_SETTINGS = {
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'LMSdb',
-        'USER': 'ubuntu',
-        'PASSWORD': 'ubuntu',
-        'HOST': 'ec2-65-0-132-251.ap-south-1.compute.amazonaws.com',
+        'ENGINE': config('DATABASE_ENGINE'),
+        'NAME': config('DATABASE_NAME'),
+        'USER': config('DATABASE_USER'),
+        'PASSWORD': config('DATABASE_PASSWORD'),
+        'HOST': config('DATABASE_HOST'),
         'POST': '',
     }
 }
