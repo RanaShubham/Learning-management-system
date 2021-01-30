@@ -25,7 +25,7 @@ class Data(TestCase):
         self.register_url = reverse("account:post_user")
         self.login_url = reverse("account:login_user")
         self.mentor_login_url = reverse("account:login_user")
-        self.post_role_url = reverse("account:post_role")
+        self.post_role_url = reverse("account:get_post_role")
         self.post_course_url = reverse("course-register")
         self.get_mentors_url = reverse("mentor:get_mentors")
         self.post_mentor_url = reverse("mentor:post_mentor")
@@ -52,9 +52,10 @@ class Data(TestCase):
                                   'description':"Python for beginners"
                                  }
         self.valid_mentor_data = {'user': "mentorZ@gmail.com",
-                                    'course': "Python"}
+                                    'course': 1}
         self.invalid_mentor_data = {'user': "mentorZ@gmail.com",
-                                  'course': "Java"}
+                                  'course': 4}
+
 
     def test_admin_get_all_users(self):
         response = self.client.post(self.login_url, self.admin_data, format='json')
@@ -84,9 +85,9 @@ class Data(TestCase):
     def test_post_mentor_for_non_existent_mentor_returns_404_NOT_FOUND(self):
         response = self.client.post(self.login_url, self.admin_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
         Authorization = response.get('HTTP_AUTHORIZATION')
-
+        self.client.post(self.post_role_url, self.role_data, HTTP_AUTHORIZATION=Authorization, format='json')
+        self.client.post(self.post_course_url, self.course_data, HTTP_AUTHORIZATION=Authorization, format='json')
         response = self.client.post(self.post_mentor_url, self.valid_mentor_data, HTTP_AUTHORIZATION=Authorization,
                                     format='json')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
