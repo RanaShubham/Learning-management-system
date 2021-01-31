@@ -85,8 +85,11 @@ class UpdateUser(generics.GenericAPIView):
             if not update_user:  # if user to be updated isn't in database
                 raise LMSException(ExceptionType.NonExistentError, "No such user record found.",status.HTTP_404_NOT_FOUND)
 
-            if current_user_role != 'admin' and str(current_user_id) != kwargs.get('pk'): #if user is not admin and if the record id(pk) he seeks to update doesn't match his own id
-                raise LMSException(ExceptionType.UnauthorizedError,"Sorry,you are not authorized to update other user's credentials.",status.HTTP_401_UNAUTHORIZED)
+            if current_user_role != 'admin': #if user is not admin
+                raise LMSException(ExceptionType.UnauthorizedError,"Sorry,you are not authorized to perform this operation.",status.HTTP_401_UNAUTHORIZED)
+
+            if request.data.get('email'):
+                raise LMSException(ExceptionType.UnauthorizedError,"Sorry,email change is not allowed.",status.HTTP_400_BAD_REQUEST)
 
             if request.data.get('role'):
                 raise LMSException(ExceptionType.UnauthorizedError,"Sorry,you are not authorized to update role.Please contact admin.",status.HTTP_401_UNAUTHORIZED)
