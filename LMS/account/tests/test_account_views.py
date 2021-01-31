@@ -12,8 +12,8 @@ User = get_user_model()
 @pytest.mark.django_db
 class Data(TestCase):
     """
-    initialises all the urls and data 
-    """    
+    initialises all the urls and data
+    """
 
     def setUp(self):
         """
@@ -72,6 +72,9 @@ class Data(TestCase):
         }
         self.invalid_patch_data = {
             'role': 'student'
+        }
+        self.invalid_patch_data2 = {
+            'email': 'adam@gmail.com'
         }
 
     def test_login_admin(self):
@@ -205,7 +208,14 @@ class Data(TestCase):
         response = client.patch(self.patch_url,self.invalid_patch_data, HTTP_AUTHORIZATION=Authorization1, format='json')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_invalid_patch_with_non_admin_user_patch_others_id_should_return_401_UNAUTHORIZED(self):
+    def test_invalid_patch_trying_email_change_should_return_400_BAD_REQUEST(self):
+        client=APIClient()
+        response = self.client.post(self.login_url, self.admin_data, format='json')
+        Authorization1 = response.get('HTTP_AUTHORIZATION')
+        response = client.patch(self.patch_url,self.invalid_patch_data2, HTTP_AUTHORIZATION=Authorization1, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_invalid_patch_with_non_admin_user_patch_should_return_401_UNAUTHORIZED(self):
         client=APIClient()
         response = self.client.post(self.login_url, self.admin_data, format='json')
         Authorization1 = response.get('HTTP_AUTHORIZATION')
