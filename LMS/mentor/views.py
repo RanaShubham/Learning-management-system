@@ -114,13 +114,12 @@ class MentorProfile(generics.GenericAPIView):
     def patch(self,request,**kwargs):
         try:
             current_user_role = kwargs.get('role')
-            update_mentor = User.objects.filter(id=kwargs.get('pk')).exclude(is_deleted=True).first()
-            mentor = Mentor.objects.get(user=kwargs.get('pk'))
+            update_mentor = Mentor.objects.filter(user=kwargs.get('pk')).first()
             if current_user_role != 'admin':  # if requesting user isn't admin
                 raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.",
                                    status.HTTP_401_UNAUTHORIZED)
             if not update_mentor:  # if user to be updated isn't in database
-                raise LMSException(ExceptionType.NonExistentError, "No such user record found.", status.HTTP_404_NOT_FOUND)
+                raise LMSException(ExceptionType.NonExistentError, "No such mentor record found.", status.HTTP_404_NOT_FOUND)
             if 'user' in request.data:
                 raise LMSException(ExceptionType.UnauthorizedError, "Sorry,user id update is not permitted.",status.HTTP_401_UNAUTHORIZED)
 
@@ -128,7 +127,7 @@ class MentorProfile(generics.GenericAPIView):
                 course = Course.objects.filter(id=course_id).first()
                 if not course:
                     raise Course.DoesNotExist('No such course exists')
-            serializer = MentorSerializer(mentor,data=request.data,partial=True)
+            serializer = MentorSerializer(update_mentor,data=request.data,partial=True)
 
             serializer.is_valid(raise_exception=True)
             serializer.save()
@@ -136,7 +135,13 @@ class MentorProfile(generics.GenericAPIView):
             response = Util.manage_response(status=True,
                                             message='Course details updated successfully.', data=serializer.data,
                                             log='Course details updated successfully.', logger_obj=logger)
-            return Response(response, status=status.HTTP_201_CREATED)
+            return Response(response, status=status.HTTP_200_OK)
+        except Course.DoesNotExist as e:
+            response = Util.manage_response(status=False,
+                                            message="Requested course does not exist",
+                                            log=str(e), logger_obj=logger)
+
+            return Response(response, status.HTTP_404_NOT_FOUND, content_type="application/json")
         except LMSException as e:
             response = Util.manage_response(status=False,
                                             message=e.message,
@@ -170,13 +175,6 @@ class MentorProfile(generics.GenericAPIView):
                                             message='Deleted successfully.',
                                             log='Deleted user record successfully.', logger_obj=logger)
             return Response(response, status=status.HTTP_200_OK)
-        except Course.DoesNotExist as e:
-            response = Util.manage_response(status=False,
-                                            message="Requested course does not exist",
-                                            log=str(e), logger_obj=logger)
-
-            return Response(response, status.HTTP_404_NOT_FOUND, content_type="application/json")
-
         except LMSException as e:
             response = Util.manage_response(status=False,
                                             message=e.message,
@@ -225,14 +223,10 @@ class CreateMentor(generics.GenericAPIView):
 
             serializer = RegisterSerializer(data=request.data)
             if serializer.is_valid(raise_exception=True):
-                serializer.save()
+                user=serializer.save()
+            Util.send_email(user)
 
             request.POST._mutable = True
-            user = User.objects.filter(email=serializer.data['email']).first()
-            if not user:  # if user with this email isn't in database
-                raise LMSException(ExceptionType.NonExistentError, "No such user record found.",status.HTTP_404_NOT_FOUND)
-            if Mentor.objects.filter(user=user.id): #if a mentor object is already existing for this user
-                raise LMSException(ExceptionType.MentorExists, "An account with this user already exists.",status.HTTP_400_BAD_REQUEST)
             request.data["user"] = user.id
             request.POST._mutable = False
 
