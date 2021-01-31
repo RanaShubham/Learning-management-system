@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from LMS.utils import LMSException, ExceptionType
 from account.utils import Util
 from course.models import Course
-from course.serializers import CourseSerializer
+from course.serializers import CourseSerializer, CourseGetSerializer
 from account.models import User, Role
 from django.db.models import Q
 from django.utils.decorators import method_decorator
@@ -24,7 +24,7 @@ logger = loggers("loggers", "log_course.log")
 
 
 @method_decorator(user_login_required, name='dispatch')
-class CoursesView(generics.GenericAPIView):
+class CoursesRegisterView(generics.GenericAPIView):
     """
     Created a class to perform crud operations for the course which is taken by students
     """
@@ -48,11 +48,8 @@ class CoursesView(generics.GenericAPIView):
         """
         try:
             admin_role = Role.objects.filter(Q(role='admin')).first()
-            course_manager_role = Role.objects.filter(Q(role='course_manager')).first()
             if admin_role:
                 role = admin_role
-            elif course_manager_role:
-                role = course_manager_role
             else:
                 raise LMSException(ExceptionType.UserException, 'you are not authorized to perform this operation',
                                    status.HTTP_401_UNAUTHORIZED)
@@ -76,39 +73,71 @@ class CoursesView(generics.GenericAPIView):
                                             log=str(e), logger_obj=logger)
             return Response(response, status.HTTP_400_BAD_REQUEST)
 
-    def get(self, request, **kwargs):
-        try:
-            admin_role = Role.objects.filter(Q(role='admin')).first()
-            course_manager_role = Role.objects.filter(Q(role='course_manager')).first()
-            if admin_role:
-                role = admin_role
-            elif course_manager_role:
-                role = course_manager_role
-            else:
-                raise LMSException(ExceptionType.UserException, 'you are not authorized to perform this operation',
-                                   status.HTTP_401_UNAUTHORIZED)
-            user = User.objects.filter(Q(id=kwargs['userid']), (Q(role=role.role_id))).first()
-            if user is None:
-                raise LMSException(ExceptionType.UserException, 'you are not authorized to perform this operation',
-                                   status.HTTP_401_UNAUTHORIZED)
-            course = Course.objects.all()
-            if course is None:
-                raise LMSException(ExceptionType.NonExistentError, 'No such course found',
-                                   status.HTTP_400_BAD_REQUEST)
-            serializer = CourseSerializer(course, many=True)
-            response = Util.manage_response(status=True, message='course details retrieved', data=serializer.data,
-                                            log='course details retrieved', logger_obj=logger)
-            return Response(response, status.HTTP_200_OK)
-        except LMSException as e:
-            response = Util.manage_response(status=False,
-                                            message=e.message,
-                                            log=e.message, logger_obj=logger)
 
-            return Response(response, e.status_code, content_type="application/json")
-        except Exception as e:
-            response = Util.manage_response(status=False, message='Something went wrong. Please try again',
-                                            log=str(e), logger_obj=logger)
-            return Response(response, status.HTTP_400_BAD_REQUEST)
+# class CoursesRetrieveView(generics.GenericAPIView):
+#     """
+#     Created class to retrieve all the courses
+#     """
+#     serializer_class = CourseSerializer
+#     queryset = Course.objects.all()
+@api_view()
+def retrieve_courses(request, **kwargs):
+    try:
+        course = Course.objects.all()
+        if course is None:
+            raise LMSException(ExceptionType.NonExistentError, 'No such course found',
+                               status.HTTP_400_BAD_REQUEST)
+        serializer = CourseGetSerializer(course, many=True)
+        response = Util.manage_response(status=True, message='course details retrieved', data=serializer.data,
+                                        log='course details retrieved', logger_obj=logger)
+        return Response(response, status.HTTP_200_OK)
+    except LMSException as e:
+        response = Util.manage_response(status=False,
+                                        message=e.message,
+                                        log=e.message, logger_obj=logger)
+
+        return Response(response, e.status_code, content_type="application/json")
+    except Exception as e:
+        response = Util.manage_response(status=False, message='Something went wrong. Please try again',
+                                        log=str(e), logger_obj=logger)
+        return Response(response, status.HTTP_400_BAD_REQUEST)
+
+
+# class CourseRetrieveView(generics.GenericAPIView):
+#     """
+#     Created a class to retrieve a single course
+#     """
+#     serializer_class = CourseSerializer
+#     queryset = Course.objects.all()
+@api_view()
+def retrieve_course(request, **kwargs):
+    """
+          [displays specific course data ]
+          args: kwargs[pk]: user id of the user
+          Returns:
+              Response: status , message and data
+              @type: status: Boolean, message:str, data: list
+          """
+    try:
+        course = Course.objects.filter(Q(id=kwargs.get('pk'))).first()
+        if course is None:
+            raise LMSException(ExceptionType.NonExistentError, 'No such course found',
+                               status.HTTP_400_BAD_REQUEST)
+        serializer = CourseSerializer(course)
+        response = Util.manage_response(status=True, message='course details retrieved', data=serializer.data,
+                                        log='course details retrieved', logger_obj=logger)
+        return Response(response, status.HTTP_200_OK)
+
+    except LMSException as e:
+        response = Util.manage_response(status=False,
+                                        message=e.message,
+                                        log=e.message, logger_obj=logger)
+
+        return Response(response, e.status_code, content_type="application/json")
+    except Exception as e:
+        response = Util.manage_response(status=False, message='Something went wrong. Please try again',
+                                        log=str(e), logger_obj=logger)
+        return Response(response, status.HTTP_400_BAD_REQUEST)
 
 
 @method_decorator(user_login_required, name='dispatch')
@@ -118,41 +147,6 @@ class CourseView(generics.GenericAPIView):
     """
     serializer_class = CourseSerializer
     queryset = Course.objects.all()
-
-    def get(self, request, **kwargs):
-        try:
-            admin_role = Role.objects.filter(Q(role='admin')).first()
-            course_manager_role = Role.objects.filter(Q(role='course_manager')).first()
-            if admin_role:
-                role = admin_role
-            elif course_manager_role:
-                role = course_manager_role
-            else:
-                raise LMSException(ExceptionType.UserException, 'you are not authorized to perform this operation',
-                                   status.HTTP_401_UNAUTHORIZED)
-            user = User.objects.filter(Q(id=kwargs['userid']), (Q(role=role.role_id))).first()
-            if user is None:
-                raise LMSException(ExceptionType.UserException, 'you are not authorized to perform this operation',
-                                   status.HTTP_401_UNAUTHORIZED)
-            course = Course.objects.filter(Q(id=kwargs.get('pk'))).first()
-            if course is None:
-                raise LMSException(ExceptionType.NonExistentError, 'No such course found',
-                                   status.HTTP_400_BAD_REQUEST)
-            serializer = CourseSerializer(course)
-            response = Util.manage_response(status=True, message='course details retrieved', data=serializer.data,
-                                            log='course details retrieved', logger_obj=logger)
-            return Response(response, status.HTTP_200_OK)
-
-        except LMSException as e:
-            response = Util.manage_response(status=False,
-                                            message=e.message,
-                                            log=e.message, logger_obj=logger)
-
-            return Response(response, e.status_code, content_type="application/json")
-        except Exception as e:
-            response = Util.manage_response(status=False, message='Something went wrong. Please try again',
-                                            log=str(e), logger_obj=logger)
-            return Response(response, status.HTTP_400_BAD_REQUEST)
 
     def patch(self, request, **kwargs):
         """
