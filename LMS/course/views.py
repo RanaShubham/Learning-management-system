@@ -74,16 +74,10 @@ class CoursesRegisterView(generics.GenericAPIView):
             return Response(response, status.HTTP_400_BAD_REQUEST)
 
 
-# class CoursesRetrieveView(generics.GenericAPIView):
-#     """
-#     Created class to retrieve all the courses
-#     """
-#     serializer_class = CourseSerializer
-#     queryset = Course.objects.all()
 @api_view()
 def retrieve_courses(request, **kwargs):
     try:
-        course = Course.objects.all()
+        course = Course.objects.filter(is_deleted=False)
         if course is None:
             raise LMSException(ExceptionType.NonExistentError, 'No such course found',
                                status.HTTP_400_BAD_REQUEST)
@@ -103,12 +97,6 @@ def retrieve_courses(request, **kwargs):
         return Response(response, status.HTTP_400_BAD_REQUEST)
 
 
-# class CourseRetrieveView(generics.GenericAPIView):
-#     """
-#     Created a class to retrieve a single course
-#     """
-#     serializer_class = CourseSerializer
-#     queryset = Course.objects.all()
 @api_view()
 def retrieve_course(request, **kwargs):
     """
@@ -119,7 +107,7 @@ def retrieve_course(request, **kwargs):
               @type: status: Boolean, message:str, data: list
           """
     try:
-        course = Course.objects.filter(Q(id=kwargs.get('pk'))).first()
+        course = Course.objects.filter(Q(id=kwargs.get('pk')), Q(is_deleted=False)).first()
         if course is None:
             raise LMSException(ExceptionType.NonExistentError, 'No such course found',
                                status.HTTP_400_BAD_REQUEST)
@@ -221,7 +209,7 @@ class CourseView(generics.GenericAPIView):
                 if course is None:
                     raise LMSException(ExceptionType.NonExistentError, 'No such course found',
                                        status.HTTP_400_BAD_REQUEST)
-                course.delete()
+                course.soft_delete()
                 response = Util.manage_response(status=True,
                                                 message='Deleted successfully.',
                                                 log='Deleted course successfully.', logger_obj=logger)
