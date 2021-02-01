@@ -1,16 +1,11 @@
 import datetime
-import logging
-import os
 import jwt
-from django.shortcuts import redirect
 from django.urls import reverse
-from django.utils.encoding import force_str
-from rest_framework.permissions import IsAuthenticated
+from services.logging import loggers
 from .serializers import *
 from rest_framework.exceptions import AuthenticationFailed
-from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status, generics, permissions
+from rest_framework import status, generics
 from django.utils.decorators import method_decorator
 from .decorators import user_login_required
 from .models import User, Role
@@ -19,18 +14,8 @@ from services.cache import Cache
 from .utils import Util
 from rest_framework import serializers
 from LMS.utils import ExceptionType, LMSException
-from rest_framework.authentication import TokenAuthentication
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-formatter = logging.Formatter('%(asctime)s  %(name)s  %(levelname)s: %(message)s')
-
-file_handler = logging.FileHandler(os.path.abspath("loggers/log_accounts.log"))
-file_handler.setFormatter(formatter)
-
-logger.addHandler(file_handler)
-
+logger = loggers("log_accounts.log")
 
 @method_decorator(user_login_required, name='dispatch')
 class GetUsers(generics.GenericAPIView):

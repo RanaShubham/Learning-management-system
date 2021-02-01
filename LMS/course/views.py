@@ -20,7 +20,7 @@ from django.utils.decorators import method_decorator
 from account.decorators import user_login_required
 from services.logging import loggers
 
-logger = loggers("loggers", "log_course.log")
+logger = loggers("log_course.log")
 
 
 @method_decorator(user_login_required, name='dispatch')

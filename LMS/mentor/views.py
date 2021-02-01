@@ -1,28 +1,17 @@
-import logging,os
 from account.models import User, Role
 from rest_framework import status, generics
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from django.utils.decorators import method_decorator
 from account.decorators import user_login_required
 from account.serializers import RegisterSerializer
 from account.utils import Util
 from course.models import Course
+from services.logging import loggers
 from .models import Mentor
 from .serializers import MentorSerializer
 from LMS.utils import ExceptionType, LMSException
 
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-formatter = logging.Formatter('%(asctime)s  %(name)s  %(levelname)s: %(message)s')
-
-file_handler = logging.FileHandler(os.path.abspath("loggers/log_mentors.log"))
-file_handler.setFormatter(formatter)
-
-logger.addHandler(file_handler)
-
+logger = loggers("log_mentors.log")
 
 @method_decorator(user_login_required,name='dispatch')
 class AdminView(generics.GenericAPIView):

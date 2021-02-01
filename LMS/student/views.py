@@ -15,7 +15,7 @@ from django.db.models import Q
 from LMS.utils import *
 from account.utils import Util
 
-logger = loggers("loggers", "log_students.log")
+logger = loggers("log_students.log")
 
 
 @method_decorator(user_login_required, name='dispatch')
