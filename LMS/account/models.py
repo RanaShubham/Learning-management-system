@@ -20,10 +20,10 @@ class UserManager(BaseUserManager):
 
         if other_fields.get('is_staff') is not True:
             raise LMSException(ExceptionType.UserException,
-                               'Superuser must be assigned to is_staff=True.')
+                               'Superuser must be assigned to is_staff=True.',status.HTTP_400_BAD_REQUEST)
         if other_fields.get('is_superuser') is not True:
             raise LMSException(ExceptionType.UserException,
-                               'Superuser must be assigned to is_superuser=True.')
+                               'Superuser must be assigned to is_superuser=True.',status.HTTP_400_BAD_REQUEST)
 
 
         return self.create_user(name=name, email=email, role=Role.get_role_admin(),
@@ -34,15 +34,13 @@ class UserManager(BaseUserManager):
         takes details of the user as input and if all credentials are valid then it will create user
         """
         if not name:
-            raise LMSException(ExceptionType, "User must have a name.")
+            raise LMSException(ExceptionType, "User must have a name.",status.HTTP_400_BAD_REQUEST)
         if not role:
-            raise LMSException(ExceptionType, "User must have a role.")
+            raise LMSException(ExceptionType, "User must have a role.",status.HTTP_400_BAD_REQUEST)
         if not email:
-            raise LMSException(ExceptionType.UserException, "User must have an email.")
-        if not password:
-            raise LMSException(ExceptionType.UserException, "User must have a password.")
+            raise LMSException(ExceptionType.UserException, "User must have an email.",status.HTTP_400_BAD_REQUEST)
         if not phone_number:
-            raise LMSException(ExceptionType.UserException, "User must have a phone number")
+            raise LMSException(ExceptionType.UserException, "User must have a phone number",status.HTTP_400_BAD_REQUEST)
 
         email = self.normalize_email(email)
         user = self.model(name=name, email=email, role=role, phone_number=phone_number,
@@ -83,7 +81,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=128, unique=True)
     name = models.CharField(max_length=32, blank=False, null=False)
     phone_number = models.CharField(max_length=10, blank=False, null=False)
-    # role = models.CharField(max_length=16, null=False, blank=False)
     role = models.ForeignKey('Role', on_delete=models.CASCADE)
     is_deleted = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)

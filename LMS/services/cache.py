@@ -15,7 +15,7 @@ class Cache:
         """
 
         if Cache.__shared_instance is None:
-            Cache.__shared_instance = Cache('localhost',6379)
+            Cache.__shared_instance = Cache(config('REDIS_HOST'),config('REDIS_PORT'))
         return Cache.__shared_instance
 
     def __init__(self,host,port):

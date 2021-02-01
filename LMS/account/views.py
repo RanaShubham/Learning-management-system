@@ -1,6 +1,4 @@
 import datetime
-import logging
-import os
 import jwt
 from django.urls import reverse
 from services.logging import loggers
@@ -17,22 +15,18 @@ from .utils import Util
 from rest_framework import serializers
 from LMS.utils import ExceptionType, LMSException
 
-logger = loggers("loggers", "log_accounts.log")
-
+logger = loggers("log_accounts.log")
 
 @method_decorator(user_login_required, name='dispatch')
-class RegisterUser(generics.GenericAPIView):
+class GetUsers(generics.GenericAPIView):
     serializer_class = RegisterSerializer
-
     queryset = User.objects.all()
-
-
     def get(self, request, **kwargs):
         """[To get all the registered User details when logged in as admin.]
 
-        :param kwargs: [mandatory]:[string]dictionary containing requesting user's id generated from decoded token
-        :return:Response with status of success and data if successful.
-        """
+                :param kwargs: [mandatory]:[string]dictionary containing requesting user's id generated from decoded token
+                :return:Response with status of success and data if successful.
+                """
         try:
             current_user_id = kwargs.get('userid')
             if User.objects.get(id=current_user_id).role.role_id != Role.objects.get(role='admin').role_id:
@@ -56,6 +50,97 @@ class RegisterUser(generics.GenericAPIView):
                                             log=str(e), logger_obj=logger)
             return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+@method_decorator(user_login_required, name='dispatch')
+class UpdateUser(generics.GenericAPIView):
+    serializer_class = RegisterSerializer
+    queryset = User.objects.all()
+
+    def patch(self,request,**kwargs):
+        """[updates a user's one or more credentials]
+
+        :param kwargs: [mandatory]:[string]dictionary containing requesting user's id generated from decoded token
+        :return:updation confirmation, new details and status code
+        """
+
+        try:
+            current_user_id = kwargs.get('userid')
+            current_user_role = kwargs.get('role')
+            update_user = User.objects.filter(id=kwargs.get('pk')).exclude(is_deleted=True).first()
+            if not update_user:  # if user to be updated isn't in database
+                raise LMSException(ExceptionType.NonExistentError, "No such user record found.",status.HTTP_404_NOT_FOUND)
+
+            if current_user_role != 'admin': #if user is not admin
+                raise LMSException(ExceptionType.UnauthorizedError,"Sorry,you are not authorized to perform this operation.",status.HTTP_401_UNAUTHORIZED)
+
+            if request.data.get('email'):
+                raise LMSException(ExceptionType.UnauthorizedError,"Sorry,email change is not allowed.",status.HTTP_400_BAD_REQUEST)
+
+            if request.data.get('role'):
+                raise LMSException(ExceptionType.UnauthorizedError,"Sorry,you are not authorized to update role.Please contact admin.",status.HTTP_401_UNAUTHORIZED)
+
+            logger.info('updating existing user with incoming details')
+            serializer = RegisterSerializer(update_user, data=request.data, partial=True)
+            if serializer.is_valid(raise_exception=True):
+                serializer.save()
+            user_data = serializer.data
+            response = Util.manage_response(status=True,
+                                            message='Updated successfully.',data=user_data,
+                                            log='Updated user record successfully.', logger_obj=logger)
+            return Response(response, status=status.HTTP_200_OK)
+        except LMSException as e:
+            response = Util.manage_response(status=False,
+                                            message=e.message,
+                                            log=e.message, logger_obj=logger)
+            return Response(response, e.status_code, content_type="application/json")
+        except Exception as e:
+            response = Util.manage_response(status=False,
+                                            message="Something went wrong.Please try again",
+                                            log=str(e), logger_obj=logger)
+
+            return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
+
+    def delete(self, request, pk, **kwargs):
+        """[sets current user's is_deleted flag to false]
+
+        :param kwargs: [mandatory]:[string]dictionary containing user id generated from decoded token
+        :return:deletion confirmation and status code
+        """
+        try:
+            current_user_id = kwargs['userid']
+            if User.objects.get(id=current_user_id).role.role_id != Role.objects.get(role='admin').role_id:
+                raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.",status.HTTP_401_UNAUTHORIZED)
+
+            if not User.objects.filter(id=pk).exclude(is_deleted=True).exists():
+                raise LMSException(ExceptionType.NonExistentError, "Requested user does not exist",status.HTTP_404_NOT_FOUND)
+            else:
+                logger.info('deleting existing user with given id')
+                user = User.objects.get(id=pk)
+                user.soft_delete()
+            response = Util.manage_response(status=True,
+                                            message='Deleted successfully.',
+                                            log='Deleted user record successfully.', logger_obj=logger)
+            return Response(response, status=status.HTTP_200_OK)
+
+        except LMSException as e:
+            response = Util.manage_response(status=False,
+                                            message=e.message,
+                                            log=e.message, logger_obj=logger)
+
+            return Response(response, e.status_code, content_type="application/json")
+        except Exception as e:
+            response = Util.manage_response(status=False,
+                                            message="Something went wrong.Please try again",
+                                            log=str(e), logger_obj=logger)
+
+            return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
+
+
+@method_decorator(user_login_required, name='dispatch')
+class RegisterUser(generics.GenericAPIView):
+    serializer_class = RegisterSerializer
+    queryset = User.objects.all()
+
     def post(self, request, **kwargs):
         """[create User for user by taking in user details]
 
@@ -65,14 +150,12 @@ class RegisterUser(generics.GenericAPIView):
         """
 
         try:
-            requesting_user_id = kwargs.get('userid')
-            requesting_user_role = User.objects.get(id=requesting_user_id).role
-            if requesting_user_role.role_id != Role.objects.get(role='admin').role_id:
+            current_user_role = kwargs.get('role')
+            if current_user_role != 'admin':
                 raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.",
                                    status.HTTP_401_UNAUTHORIZED)
 
             normalized_admission_role = request.data['role'].lower()
-
             admission_role_obj = Role.objects.filter(role=normalized_admission_role).first()
 
             if not admission_role_obj:
@@ -116,96 +199,10 @@ class RegisterUser(generics.GenericAPIView):
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
-    def patch(self, request, **kwargs):
-        """[updates a user's one or more credentials]
-
-        :param kwargs: [mandatory]:[string]dictionary containing requesting user's id generated from decoded token
-        :return:updation confirmation, new details and status code
-        """
-
-        try:
-            current_user_id = kwargs.get('userid')
-            current_user_role = kwargs.get('role')
-            update_user = User.objects.filter(id=kwargs.get('pk')).exclude(is_deleted=True).first()
-            if not update_user:  # if user to be updated isn't in database
-                raise LMSException(ExceptionType.NonExistentError, "No such user record found.",
-                                   status.HTTP_404_NOT_FOUND)
-
-            if current_user_role != 'admin' and str(current_user_id) != kwargs.get(
-                    'pk'):  # if user is not admin and if the record id(pk) he seeks to update doesn't match his own id
-                raise LMSException(ExceptionType.UnauthorizedError,
-                                   "Sorry,you are not authorized to update other user's credentials.",
-                                   status.HTTP_401_UNAUTHORIZED)
-
-            if request.data.get('role'):
-                raise LMSException(ExceptionType.UnauthorizedError,
-                                   "Sorry,you are not authorized to update role.Please contact admin.",
-                                   status.HTTP_401_UNAUTHORIZED)
-
-            logger.info('updating existing user with incoming details')
-            serializer = RegisterSerializer(update_user, data=request.data, partial=True)
-            if serializer.is_valid(raise_exception=True):
-                serializer.save()
-            user_data = serializer.data
-            response = Util.manage_response(status=True,
-                                            message='Updated successfully.', data=user_data,
-                                            log='Updated user record successfully.', logger_obj=logger)
-            return Response(response, status=status.HTTP_200_OK)
-        except LMSException as e:
-            response = Util.manage_response(status=False,
-                                            message=e.message,
-                                            log=e.message, logger_obj=logger)
-            return Response(response, e.status_code, content_type="application/json")
-        except Exception as e:
-            response = Util.manage_response(status=False,
-                                            message="Something went wrong.Please try again",
-                                            log=str(e), logger_obj=logger)
-
-            return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
-
-    def delete(self, request, pk, **kwargs):
-        """[sets current user's is_deleted flag to false]
-
-        :param kwargs: [mandatory]:[string]dictionary containing user id generated from decoded token
-        :return:deletion confirmation and status code
-        """
-        try:
-            current_user_id = kwargs['userid']
-            if User.objects.get(id=current_user_id).role.role_id != Role.objects.get(role='admin').role_id:
-                raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.",
-                                   status.HTTP_401_UNAUTHORIZED)
-
-            if not User.objects.filter(id=pk).exclude(is_deleted=True).exists():
-                raise LMSException(ExceptionType.NonExistentError, "Requested user does not exist",
-                                   status.HTTP_404_NOT_FOUND)
-            else:
-                logger.info('deleting existing user with given id')
-                user = User.objects.get(id=pk)
-                user.soft_delete()
-            response = Util.manage_response(status=True,
-                                            message='Deleted successfully.',
-                                            log='Deleted user record successfully.', logger_obj=logger)
-            return Response(response, status=status.HTTP_200_OK)
-
-        except LMSException as e:
-            response = Util.manage_response(status=False,
-                                            message=e.message,
-                                            log=e.message, logger_obj=logger)
-
-            return Response(response, e.status_code, content_type="application/json")
-        except Exception as e:
-            response = Util.manage_response(status=False,
-                                            message="Something went wrong.Please try again",
-                                            log=str(e), logger_obj=logger)
-
-            return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
-
 
 class LoginUser(generics.GenericAPIView):
     serializer_class = LoginSerializer
-
-
-
+    queryset = User.objects.all()
     def post(self, request):
         """[gets user with matching credentials and generates authentication token using id and time]
 
@@ -216,23 +213,17 @@ class LoginUser(generics.GenericAPIView):
             serializer = LoginSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             logger.info('checking existing user with given email')
-            user = User.objects.get(email=serializer.data['email'])
+            user = User.objects.filter(email=serializer.data['email']).first()
             current_time = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
-            token = Encrypt.encode(user.id, user.role.role, current_time)
+            token = Encrypt.encode(user.id,user.role.role, current_time)
             Cache.getInstance().set("TOKEN_" + str(user.id) + "_AUTH", token)
             result = Util.manage_response(status=True,
-                                          message='Token generated.Login successful.',
-                                          log='Token generated.Login successful.', logger_obj=logger)
+                                            message='Token generated.Login successful.',
+                                            log='Token generated.Login successful.', logger_obj=logger)
 
             response = Response(result, status=status.HTTP_200_OK, content_type="application/json")
             response.__setitem__(header="HTTP_AUTHORIZATION", value=token)
             return response
-        except User.DoesNotExist as e:
-            response = Util.manage_response(status=False,
-                                            message="User does not exist",
-                                            log=str(e), logger_obj=logger)
-
-            return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
         except AuthenticationFailed as e:
             response = Util.manage_response(status=False,
                                             message="Invalid credentials",
@@ -245,6 +236,10 @@ class LoginUser(generics.GenericAPIView):
                                             log=str(e), logger_obj=logger)
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
+
+class LogoutUser(generics.GenericAPIView):
+    serializer_class = LoginSerializer
+    queryset = User.objects.all()
 
     @method_decorator(user_login_required, name='dispatch')
     def get(self, request, **kwargs):
@@ -260,8 +255,8 @@ class LoginUser(generics.GenericAPIView):
             if cache.get("TOKEN_" + str(current_user) + "_AUTH"):
                 cache.delete("TOKEN_" + str(current_user) + "_AUTH")
             response = Util.manage_response(status=True,
-                                            message='Logged out',
-                                            log='Logged out', logger_obj=logger)
+                                          message='Logged out',
+                                          log='Logged out', logger_obj=logger)
 
             return Response(response, status=status.HTTP_200_OK, content_type="application/json")
         except Exception as e:
@@ -271,13 +266,12 @@ class LoginUser(generics.GenericAPIView):
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
 
+
 class RequestPasswordResetEmail(generics.GenericAPIView):
     """[sends an email to facilitate password reset]
     """
     serializer_class = ResetPasswordEmailRequestSerializer
-
-
-
+    queryset = User.objects.all()
     def post(self, request, **kwargs):
         """[sends an email to facilitate password reset]
         :param request: [mandatory]:[string]:email of user
@@ -294,6 +288,7 @@ class RequestPasswordResetEmail(generics.GenericAPIView):
                 token = force_str(Encrypt.encode_reset(user.id, current_time))
                 Cache.getInstance().set("RESET_" + str(user.id) + "_TOKEN", token)
                 redirect_url = reverse('account:reset_password', kwargs={'reset_token': token})
+                Cache.getInstance().set("REDIRECT_"+ str(user.id) + "_URL",redirect_url)  #caching url for testing
                 url = request.build_absolute_uri(redirect_url)
                 email_body = 'Hello, please click on the link below and enter new password when asked for\n' + url
                 data = {'email_body': email_body, 'to_email': user.email, 'email_subject': 'Reset your passsword'}
@@ -314,12 +309,12 @@ class RequestPasswordResetEmail(generics.GenericAPIView):
             return Response(response, status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
 
+
 class SetNewPassword(generics.GenericAPIView):
-    """[returns new password when supplied with uid,token and new password]
+    """[returns new password when supplied with new password]
     """
     serializer_class = SetNewPasswordSerializer
-
-
+    queryset = User.objects.all()
     def patch(self, request, **kwargs):
         """[returns new password when supplied with uid,token and new password]
 
@@ -332,15 +327,11 @@ class SetNewPassword(generics.GenericAPIView):
             id = Encrypt.decode(token).get('id')
             cached_reset_token = force_str(Cache.getInstance().get("RESET_" + str(id) + "_TOKEN"))
             if cached_reset_token == 'None':
-                raise LMSException(ExceptionType.UnauthorizedError, "reset password url is expired.",
-                                   status.HTTP_401_UNAUTHORIZED)
+                raise LMSException(ExceptionType.UnauthorizedError, "reset password url is expired.",status.HTTP_401_UNAUTHORIZED)
             if cached_reset_token != token:
-                raise LMSException(ExceptionType.UnauthorizedError, "reset password url is invalid.",
-                                   status.HTTP_400_BAD_REQUEST)
+                raise LMSException(ExceptionType.UnauthorizedError, "reset password url is invalid.",status.HTTP_400_BAD_REQUEST)
             if not password or len(password) <= 2:
-                raise LMSException(ExceptionType.UserException,
-                                   "Please provide a appropirate password with atleast 3 character.",
-                                   status.HTTP_400_BAD_REQUEST)
+                raise LMSException(ExceptionType.UserException, "Please provide a appropirate password with atleast 3 character.",status.HTTP_400_BAD_REQUEST)
             logger.info("checking for user matching id retrieved from token")
             user = User.objects.get(id=id)
             user.set_password(password)
@@ -364,4 +355,76 @@ class SetNewPassword(generics.GenericAPIView):
             response = Util.manage_response(status=False,
                                             message="Something went wrong.Please try again",
                                             log=str(e), logger_obj=logger)
-            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR, content_type="application/json")
+            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR,content_type="application/json")
+
+
+@method_decorator(user_login_required, name='dispatch')
+class CreateRole(generics.GenericAPIView):
+    serializer_class = RoleSerializer
+    queryset = User.objects.all()
+    def post(self, request, **kwargs):
+        """[create role taking in role id and role name]
+
+        :param kwargs: [mandatory]:[string]dictionary containing requesting user's id and role generated from decoded token
+        :param request:[mandatory]: id and name of role to be created
+        :return:creation confirmation and status code.
+        """
+        try:
+            current_user_role = kwargs.get('role')
+            if current_user_role != 'admin':
+                raise LMSException(ExceptionType.UnauthorizedError,
+                                   "Sorry,you are not authorized to update other user's credentials.",
+                                   status.HTTP_401_UNAUTHORIZED)
+            logger.info("creating new role with incoming role details")
+            request.POST._mutable = True
+            normalized_admission_role = request.data['role'].lower()
+            request.data['role'] = normalized_admission_role
+            request.POST._mutable = False
+            serializer = RoleSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+            response = Util.manage_response(status=True,
+                                            message='Role created successfully.',
+                                            log='Role created successfully.', logger_obj=logger)
+            return Response(response, status=status.HTTP_201_CREATED)
+        except LMSException as e:
+            response = Util.manage_response(status=False,
+                                            message=e.message,
+                                            log=e.message, logger_obj=logger)
+            return Response(response, e.status_code, content_type="application/json")
+        except Exception as e:
+            response = Util.manage_response(status=False,
+                                            message="Something went wrong.Please try again",
+                                            log=str(e), logger_obj=logger)
+            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR,content_type="application/json")
+
+
+    def get(self, request, **kwargs):
+        """[To get all the role details when logged in as admin.]
+
+                :param kwargs: [mandatory]:[string]dictionary containing requesting user's id generated from decoded token
+                :return:Response with status of success and data if successful.
+                """
+        try:
+            current_user_role = kwargs.get('role')
+            if current_user_role != 'admin':
+                raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.",
+                                   status.HTTP_401_UNAUTHORIZED)
+
+            logger.info('retrieving list of roles')
+            roles = Role.objects.all()
+            serializer = RoleSerializer(roles, many=True)
+            response = Util.manage_response(status=True, message='Retrieved all roles.', data=serializer.data,
+                                            log='retrieved roles', logger_obj=logger)
+            return Response(response, status=status.HTTP_200_OK)
+        except LMSException as e:
+            response = Util.manage_response(status=False,
+                                            message=e.message,
+                                            log=e.message, logger_obj=logger)
+            return Response(response, e.status_code, content_type="application/json")
+        except Exception as e:
+            response = Util.manage_response(status=False,
+                                            message="Something went wrong.Please try again",
+                                            log=str(e), logger_obj=logger)
+            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
