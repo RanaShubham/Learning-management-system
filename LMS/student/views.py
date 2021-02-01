@@ -11,7 +11,7 @@ from .serializers import StudentSerializer
 from .models import Student
 from django.utils.decorators import method_decorator
 from account.decorators import user_login_required
-from account.models import User
+from account.models import User, Role
 from django.db.models import Q
 from LMS.utils import *
 from account.utils import Util
@@ -245,14 +245,24 @@ class CreateStudent(generics.GenericAPIView):
             if current_user_role != 'admin':
                 raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.",
                                    status.HTTP_401_UNAUTHORIZED)
+            normalized_admission_role = request.data['role'].lower()
+            admission_role_obj = Role.objects.filter(role=normalized_admission_role).first()
+            if not admission_role_obj:
+                raise LMSException(ExceptionType.RoleError, "{} is not a valid role.".format(normalized_admission_role),
+                                   status.HTTP_400_BAD_REQUEST)
+
+            request.POST._mutable = True
+            request.data['role'] = admission_role_obj.pk
+            request.POST._mutable = False
             serializer = RegisterSerializer(data=request.data)
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
             user = User.objects.filter(email=serializer.data['email']).first()
+            Util.send_email(user)
             if not user:
                 raise LMSException(ExceptionType.NonExistentError, "No such user record found.", status.HTTP_404_NOT_FOUND)
             if Student.objects.filter(user=user.id).first():
-                raise LMSException(ExceptionType.MentorExists, "An account with this user already exists.",
+                raise LMSException(ExceptionType.StudentExist, "An account with this user already exists.",
 
                                    status.HTTP_400_BAD_REQUEST)
             request.POST._mutable = True
