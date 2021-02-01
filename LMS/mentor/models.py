@@ -4,6 +4,7 @@ from course.models import Course
 
 
 class Mentor(models.Model):
+    id = models.CharField(primary_key=True, null=False, blank=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='mentor')
     course = models.ForeignKey(Course,on_delete=models.CASCADE, related_name='course')
     is_deleted = models.BooleanField(default=False)

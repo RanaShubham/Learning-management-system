@@ -244,7 +244,7 @@ class LoginUser(generics.GenericAPIView):
             return Response(response, status.HTTP_401_UNAUTHORIZED, content_type="application/json")
         except Exception as e:
             response = Util.manage_response(status=False,
-                                            message="Something went wrong.Please try again",
+                                            message=str(e),
                                             log=str(e), logger_obj=logger)
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")

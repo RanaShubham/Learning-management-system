@@ -4,10 +4,11 @@ import enum
 class ExceptionType(enum.Enum):
     UserException = "Cannot create user instance."
     NonExistentError = "Requested user does not exist"
-    UnauthorizedError = "Sorry,you are not authorized to perform this operation."
+    UnauthorizedError = "Sorry, you are not authorized to perform this operation."
     StudentNotFound = "student data not found"
     StudentExist = "student already exist"
     MentorExists = "mentor already exists"
+    PerformanceRecordExists = "Performance record of the student for this course already exiits."
 
 class LMSException(Exception):
     """[Custom exception.]
