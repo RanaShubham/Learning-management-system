@@ -69,7 +69,7 @@ class CourseRegisterView(generics.GenericAPIView):
                                             log=e.message, logger_obj=logger)
             return Response(response, e.status_code)
         except Exception as e:
-            response = Util.manage_response(status=False, message='Something went wrong. Please try again',
+            response = Util.manage_response(status=False, message="Something went wrong.",
                                             log=str(e), logger_obj=logger)
             return Response(response, status.HTTP_400_BAD_REQUEST)
 
