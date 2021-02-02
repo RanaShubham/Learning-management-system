@@ -1,7 +1,7 @@
 from django.db import models
 
 class Course(models.Model):
-    course_id = models.CharField(primary_key=True, max_length=50, blank=False, null=False)
+    id = models.CharField(primary_key=True, max_length=50, default="CID000")
     name = models.CharField(max_length=50, blank=False, null=False)
     price = models.FloatField(max_length=10, blank=False, null=False)
     duration = models.CharField(max_length=25, blank=False, null=False)
@@ -14,3 +14,10 @@ class Course(models.Model):
     def soft_delete(self):
         self.is_deleted = True
         self.save()
+
+    def save(self, **kwargs):
+        if self.id == 'CID000':
+            count = Course.objects.count()
+            new_id = str("{:03d}".format(count + 1))
+            self.id = "{}{}".format('CID', new_id)
+        super().save(**kwargs)
