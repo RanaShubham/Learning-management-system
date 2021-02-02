@@ -3,7 +3,6 @@ from django.utils.decorators import method_decorator
 from rest_framework import status, generics
 from rest_framework.response import Response
 
-
 from account.serializers import RegisterSerializer
 from services.logging import loggers
 from .serializers import StudentSerializer
@@ -25,7 +24,6 @@ logger = loggers("log_students.log")
 
 
 @method_decorator(user_login_required, name='dispatch')
-
 class CreateStudent(generics.GenericAPIView):
     """
     Created a class to register a student with user details together
@@ -219,7 +217,7 @@ class StudentDetails(generics.GenericAPIView):
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
-    def patch(self, request, *args, **kwargs):
+    def put(self, request, *args, **kwargs):
         """
         [updates the respective student data ]
         args: kwargs[pk]: user id of the user
