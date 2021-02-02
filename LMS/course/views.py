@@ -1,23 +1,16 @@
-import logging
-import os
-
-from django.shortcuts import render
-
 # Create your views here.
-from drf_yasg.utils import swagger_auto_schema
 
+from django.db.models import Q
+from django.utils.decorators import method_decorator
 from rest_framework import status, generics
-from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 
 from LMS.utils import LMSException, ExceptionType
+from account.decorators import user_login_required
+from account.models import User, Role
 from account.utils import Util
 from course.models import Course
 from course.serializers import CourseSerializer
-from account.models import User, Role
-from django.db.models import Q
-from django.utils.decorators import method_decorator
-from account.decorators import user_login_required
 from services.logging import loggers
 
 logger = loggers("loggers", "log_course.log")

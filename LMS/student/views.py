@@ -10,6 +10,7 @@ from account.utils import Util
 from services.logging import loggers
 from .models import Student
 from .serializers import StudentSerializer
+import base64
 
 logger = loggers("loggers", "log_students.log")
 
@@ -142,13 +143,14 @@ class StudentDetails(generics.GenericAPIView):
         """
         try:
             user = User.objects.get(id=kwargs['userid'])  # requesting user:admin/student
-            student_details = Student.objects.filter(Q(student_id=kwargs['pk'])).first()
+            student_details = Student.objects.filter(Q(user=kwargs['pk'])).first()
             if student_details is None:
                 raise LMSException(ExceptionType.StudentNotFound, 'No such student found', status.HTTP_400_BAD_REQUEST)
             elif student_details.student_id == user.id or kwargs['role'] == 'admin':
                 serializer = StudentSerializer(student_details)
                 data = {'name': student_details.user.name, 'email': student_details.user.email,
                         'phone_number': student_details.user.phone_number}
+
                 data.update(serializer.data)
                 data.pop('user')
                 response = Util.manage_response(status=True, message='student details retrieved',
