@@ -209,7 +209,6 @@ class LoginUser(generics.GenericAPIView):
         :return:login confirmation, authentication token containing user id and status code
         """
         try:
-
             serializer = LoginSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             logger.info('checking existing user with given email')
@@ -232,7 +231,7 @@ class LoginUser(generics.GenericAPIView):
             return Response(response, status.HTTP_401_UNAUTHORIZED, content_type="application/json")
         except Exception as e:
             response = Util.manage_response(status=False,
-                                            message="Something went wrong.Please try again",
+                                            message=str(e),
                                             log=str(e), logger_obj=logger)
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
@@ -264,8 +263,6 @@ class LogoutUser(generics.GenericAPIView):
                                             message="Something went wrong.Please try again",
                                             log=str(e), logger_obj=logger)
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
-
-
 
 class RequestPasswordResetEmail(generics.GenericAPIView):
     """[sends an email to facilitate password reset]
@@ -307,8 +304,6 @@ class RequestPasswordResetEmail(generics.GenericAPIView):
                                             message="Something went wrong.Please try again",
                                             log=str(e), logger_obj=logger)
             return Response(response, status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
-
-
 
 class SetNewPassword(generics.GenericAPIView):
     """[returns new password when supplied with new password]
@@ -388,6 +383,11 @@ class CreateRole(generics.GenericAPIView):
                                             message='Role created successfully.',
                                             log='Role created successfully.', logger_obj=logger)
             return Response(response, status=status.HTTP_201_CREATED)
+        except serializers.ValidationError as e:
+            response = Util.manage_response(status=False,
+                                            message=e.detail,
+                                            log=str(e), logger_obj=logger)
+            return Response(response, e.status_code, content_type="application/json")
         except LMSException as e:
             response = Util.manage_response(status=False,
                                             message=e.message,

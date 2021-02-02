@@ -69,7 +69,7 @@ class CourseRegisterView(generics.GenericAPIView):
                                             log=e.message, logger_obj=logger)
             return Response(response, e.status_code)
         except Exception as e:
-            response = Util.manage_response(status=False, message='Something went wrong. Please try again',
+            response = Util.manage_response(status=False, message="Something went wrong.",
                                             log=str(e), logger_obj=logger)
             return Response(response, status.HTTP_400_BAD_REQUEST)
 
@@ -92,9 +92,9 @@ def retrieve_courses(request, **kwargs):
 
         return Response(response, e.status_code, content_type="application/json")
     except Exception as e:
-        response = Util.manage_response(status=False, message='Something went wrong. Please try again',
+        response = Util.manage_response(status=False, message=str(e),
                                         log=str(e), logger_obj=logger)
-        return Response(response, status.HTTP_400_BAD_REQUEST)
+        return Response(response, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view()

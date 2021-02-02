@@ -25,7 +25,6 @@ class UserManager(BaseUserManager):
             raise LMSException(ExceptionType.UserException,
                                'Superuser must be assigned to is_superuser=True.',status.HTTP_400_BAD_REQUEST)
 
-
         return self.create_user(name=name, email=email, role=Role.get_role_admin(),
                                 password=password,phone_number=phone_number, **other_fields)
 

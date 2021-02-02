@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/3.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 from decouple import config
@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'mentor',
     'rest_framework.authtoken',
     'course',
+    'performance_info'
 ]
 
 MIDDLEWARE = [
@@ -85,6 +86,17 @@ AUTHENTICATION_BACKENDS = (
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
+#FIXME:
+# DATABASES = {
+#     'default': {
+#         'ENGINE': config('DB_ENGINE'),
+#         'NAME': config('DB_NAME'),
+#         'USER': config('DB_USER'),
+#         'PASSWORD': config('DB_PASSWORD'),
+#         'HOST': config('DB_HOST'),
+#         'POST': '',
+#     }
+# }
 
 # DATABASES = {
 #     'default': {
@@ -156,3 +168,5 @@ SWAGGER_SETTINGS = {
         }
     },
 }
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'profile_images')

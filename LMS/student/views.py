@@ -4,6 +4,8 @@ from rest_framework import status, generics
 from rest_framework.response import Response
 
 from account.serializers import RegisterSerializer
+from course.models import Course
+from mentor.models import Mentor
 from services.logging import loggers
 from .serializers import StudentSerializer
 from .models import Student
@@ -83,6 +85,10 @@ class CreateStudent(generics.GenericAPIView):
             request.POST._mutable = True
             request.data["student_id"] = student_obj.id
             request.POST._mutable = False
+            if not Course.objects.filter(id=request.data['course_id']).first():
+                raise LMSException(ExceptionType.NonExistentError, "Course does not exist", status.HTTP_404_NOT_FOUND)
+            if not Mentor.objects.filter(id=request.data['mentor_id']).first():
+                raise LMSException(ExceptionType.NonExistentError, "Course does not exist", status.HTTP_404_NOT_FOUND)
             serializer = PerformanceInfoSerializer(data=request.data)
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
