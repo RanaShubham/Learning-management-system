@@ -62,11 +62,13 @@ class GetPerformanceInfo(generics.GenericAPIView):
 
             serializer = PerformanceInfoSerializer(performance_records, many=True)
 
+            #TODO: CHECKOUT Django shell.
+            #TODO: use select_related() ORM.
             for each in serializer.data:
-                student_name = Student.objects.get(id = each.get('student_id'))
-                mentor_name = Mentor.objects.get(id = each.get('mentor_id'))
-                course_name = Course.objecs.get(id = each.get('course_id'))
-                each["student_name"] = student_name
+                student_name = Student.objects.get(id = each.get('student_id')).name
+                mentor_name = Mentor.objects.get(id = each.get('mentor_id')).name
+                course_name = Course.objecs.get(id = each.get('course_id')).name
+                each['student_name'] = student_name
                 each['mentor_name'] = mentor_name
                 each['course_name'] = course_name
 
@@ -143,6 +145,7 @@ class AddPerformanceInfo(generics.GenericAPIView):
             response = account_utils.manage_response(status=False, message = "Something went wrong.", \
                 log = str(e), logger = status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
 @method_decorator(user_login_required, name='dispatch')
 class UpdatePerformanceInfo(generics.GenericAPIView):
     serializer_class = PerformanceInfoUpdateSerializer
@@ -158,6 +161,7 @@ class UpdatePerformanceInfo(generics.GenericAPIView):
         :return:Response with status of success and data if successful.
         """
         try:
+            #FIXME: Add Admin can update whole record
             current_user_role = kwargs.get('role')
             record_id_to_be_updated = kwargs.get("performance_id")
 
@@ -184,7 +188,7 @@ class UpdatePerformanceInfo(generics.GenericAPIView):
             response = account_utils.manage_response(status=False, message = "Something went wrong.", \
                 log = str(e), logger = status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
+    #TODO: Can have AdminOnly decorator
     def delete(self, request, **kwargs):
         """[To delete performance record for a student when logged in as admin.]
 
@@ -203,6 +207,7 @@ class UpdatePerformanceInfo(generics.GenericAPIView):
 
             record_to_be_deleted = PerformanceInfo.objects.get(id=record_id_to_be_updated, is_deleted = False)
             record_to_be_deleted.is_deleted = True
+            #TODO: Add logging inside the views as well.
             record_to_be_deleted.save()
             response = account_utils.manage_response(status=True, message='Deleted performance record.',\
                 log='Deleted perfromance record', logger_obj=logger)
