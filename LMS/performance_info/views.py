@@ -72,6 +72,8 @@ class GetPerformanceInfo(generics.GenericAPIView):
             response = account_utils.manage_response(status=True, message='Retrieved performance records.',data=serializer.data,
                                             log='retrieved perfromance records', logger_obj=logger)
             return Response(response, status=status.HTTP_200_OK)
+        except serializers.ValidationError as e:
+            response = account_utils.manage_response(status=False, message=e.detail, log=e.detail, logger_obj=logger)
         except Mentor.DoesNotExist as e:
             response = account_utils.manage_response(status=False, message = "You are not a mentor.", log=str(e), logger_obj=logger)
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
@@ -104,10 +106,8 @@ class AddPerformanceInfo(generics.GenericAPIView):
         :return:Response with status of success and data if successful.
         """
         try:
-            current_user_id = kwargs.get('userid')
             current_user_role = kwargs.get('role')
 
-            mentor_id = request.data.get("mentor_id")
             course_id = request.data.get("course_id")
             student_id = request.data.get("student_id")
 
@@ -129,26 +129,9 @@ class AddPerformanceInfo(generics.GenericAPIView):
                 response = account_utils.manage_response(status=True, message='Added performance record.',\
                     log='Added perfromance record', logger_obj=logger)
                 return Response(response, status=status.HTTP_200_OK)
-#FIXME: Mentor can't add performance record.
-            #If current user is mentor and mentor id given in request is of himself only.
-            if current_user_role == 'mentor' and current_user_id == \
-                Mentor.objects.get(is_deleted = False, id=mentor_id).user.id:
-
-                course = Course.objects.filter(is_deleted = False).filter(course_id=course_id).first()
-
-                #If mentor is teaching the course given in the request.
-                if Mentor.objects.filter(id=mentor_id).first().course.contains(course):
-                    serializer = PerformanceInfoSerializer(request.data)
-                    serializer.is_valid(raise_exception=True)
-                    serializer.save()
-                    response = account_utils.manage_response(status=True, message='Added performance record.',\
-                        log='Added perfromance record', logger_obj=logger)
-                    return Response(response, status=status.HTTP_200_OK)
-                else:
-                    raise LMSException(ExceptionType.UnauthorizedError,\
-                    "This course is not taught by you",status.HTTP_401_UNAUTHORIZED)
-            else:
-                raise LMSException(ExceptionType.UnauthorizedError,\
-                    "You cannot add performance record for another mentor.",status.HTTP_401_UNAUTHORIZED)
-                
-        
+        except serializers.ValidationError as e:
+            response = account_utils.manage_response(status=False, message=e.detail, log=e.detail, logger_obj=logger)
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            response = account_utils.manage_response(status=False, message = "Something went wrong.", \
+                log = str(e), logger = status.HTTP_500_INTERNAL_SERVER_ERROR)

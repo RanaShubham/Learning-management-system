@@ -1,6 +1,4 @@
 import json, jwt, os
-import logging
-
 from services.logging import loggers
 from .utils import Util
 from django.http import HttpResponse
@@ -8,8 +6,7 @@ from rest_framework import status
 from services.cache import Cache
 from services.encrypt import Encrypt
 
-logger = loggers("loggers", "log_decorators.log")
-
+logger = loggers("log_decorators.log")
 
 def user_login_required(view_func):
     """[gets token and fetches user id verifying active status.

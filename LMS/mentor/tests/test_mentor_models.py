@@ -6,7 +6,7 @@ from mixer.backend.django import mixer
 class TestMentor:
     def test_model(self):
         mentor_obj = mixer.blend('mentor.Mentor')
-        assert mentor_obj.pk == 1, 'Should save a mentor instance'
+        assert mentor_obj.pk == 'MID001', 'Should save a mentor instance'
 
 
     def test_mentor_is_soft_deleted(self):

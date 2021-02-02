@@ -1,16 +1,11 @@
 import datetime
-import logging
-import os
 import jwt
-from django.shortcuts import redirect
 from django.urls import reverse
-from django.utils.encoding import force_str
-from rest_framework.permissions import IsAuthenticated
+from services.logging import loggers
 from .serializers import *
 from rest_framework.exceptions import AuthenticationFailed
-from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status, generics, permissions
+from rest_framework import status, generics
 from django.utils.decorators import method_decorator
 from .decorators import user_login_required
 from .models import User, Role
@@ -19,18 +14,8 @@ from services.cache import Cache
 from .utils import Util
 from rest_framework import serializers
 from LMS.utils import ExceptionType, LMSException
-from rest_framework.authentication import TokenAuthentication
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-formatter = logging.Formatter('%(asctime)s  %(name)s  %(levelname)s: %(message)s')
-
-file_handler = logging.FileHandler(os.path.abspath("loggers/log_accounts.log"))
-file_handler.setFormatter(formatter)
-
-logger.addHandler(file_handler)
-
+logger = loggers("log_accounts.log")
 
 @method_decorator(user_login_required, name='dispatch')
 class GetUsers(generics.GenericAPIView):
@@ -85,8 +70,11 @@ class UpdateUser(generics.GenericAPIView):
             if not update_user:  # if user to be updated isn't in database
                 raise LMSException(ExceptionType.NonExistentError, "No such user record found.",status.HTTP_404_NOT_FOUND)
 
-            if current_user_role != 'admin' and str(current_user_id) != kwargs.get('pk'): #if user is not admin and if the record id(pk) he seeks to update doesn't match his own id
-                raise LMSException(ExceptionType.UnauthorizedError,"Sorry,you are not authorized to update other user's credentials.",status.HTTP_401_UNAUTHORIZED)
+            if current_user_role != 'admin': #if user is not admin
+                raise LMSException(ExceptionType.UnauthorizedError,"Sorry,you are not authorized to perform this operation.",status.HTTP_401_UNAUTHORIZED)
+
+            if request.data.get('email'):
+                raise LMSException(ExceptionType.UnauthorizedError,"Sorry,email change is not allowed.",status.HTTP_400_BAD_REQUEST)
 
             if request.data.get('role'):
                 raise LMSException(ExceptionType.UnauthorizedError,"Sorry,you are not authorized to update role.Please contact admin.",status.HTTP_401_UNAUTHORIZED)

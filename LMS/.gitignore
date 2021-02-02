@@ -15,3 +15,4 @@ userReg/
 *loggers*
 .pytest_cache
 *dump.rdb*
+*00*

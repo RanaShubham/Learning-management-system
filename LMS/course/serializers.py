@@ -11,3 +11,13 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = '__all__'
+
+
+class CourseGetSerializer(serializers.ModelSerializer):
+    """
+    created a serializer class to serialize and deserialize the data
+
+    """
+    class Meta:
+        model = Course
+        fields = ('id', 'name')
