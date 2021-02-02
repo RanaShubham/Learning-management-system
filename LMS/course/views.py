@@ -24,7 +24,7 @@ logger = loggers("log_course.log")
 
 
 @method_decorator(user_login_required, name='dispatch')
-class CoursesRegisterView(generics.GenericAPIView):
+class CourseRegisterView(generics.GenericAPIView):
     """
     Created a class to perform crud operations for the course which is taken by students
     """

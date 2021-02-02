@@ -9,5 +9,6 @@ pytestmark = pytest.mark.django_db
 
 class TestCourse:
     def test_init(self):
-        course_obj = mixer.blend('course.Course', pk=1)
-        assert course_obj.pk == 1, 'Should save an instance'
+        course_obj = mixer.blend('course.Course', name='java')
+        assert course_obj.name == 'java', 'Should save an instance'
+

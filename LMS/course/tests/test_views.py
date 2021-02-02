@@ -66,6 +66,7 @@ class CourseDetailsTest(Data):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         response = self.client.get(self.get_courses_url, HTTP_AUTHORIZATION=headers, format='json')
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response = client.patch(self.single_course_url, self.valid_patch_data, HTTP_AUTHORIZATION=headers,
                                 format='json')
@@ -87,7 +88,6 @@ class CourseDetailsTest(Data):
 
         response = self.client.get(self.single_course_url, HTTP_AUTHORIZATION=headers, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
 
     def test_course_with_invalid_details_patch(self):
         response = self.client.post(self.admin_login_url, self.admin_login_data, format='application/json')
