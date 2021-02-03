@@ -1,8 +1,11 @@
+import sqlite3
+import pandas as pd
+from pandas import DataFrame
+from sqlalchemy import create_engine
 from django.db.models import Q
 from django.utils.decorators import method_decorator
 from rest_framework import status, generics
 from rest_framework.response import Response
-
 
 from account.serializers import RegisterSerializer
 from services.logging import loggers
@@ -16,8 +19,8 @@ from LMS.utils import *
 
 from account.utils import Util
 from services.logging import loggers
-from .models import Student
-from .serializers import StudentSerializer
+from .models import Student, StudentFile
+from .serializers import StudentSerializer, StudentFileSerializer
 
 from performance_info.serializers import *
 
@@ -280,6 +283,44 @@ class StudentDetails(generics.GenericAPIView):
         except Exception as e:
             response = Util.manage_response(status=False,
                                             message="some other issue occurred",
+                                            log=str(e), logger_obj=logger)
+
+            return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
+@method_decorator(user_login_required, name='dispatch')
+
+class AddStudentByFile(generics.GenericAPIView):
+    """
+    Created a class to register a student with user details together
+    """
+
+    serializer_class = StudentFileSerializer
+    queryset = StudentFile.objects.all()
+
+    def post(self, request, **kwargs):
+        """
+        A method to post student details
+        """
+        try:
+            instance = StudentFile(student_details= request.FILES['student_details'])
+            instance.save()
+            engine = create_engine('postgresql+psycopg2://admin:admin@localhost:5432/mydatabase')
+
+            df = pd.read_excel(instance.student_details.path, index_col=0)
+            vals_list = df.to_dict()
+            print(vals_list)
+            nf = DataFrame(df)
+            # pd.set_option('display.max_rows', None)
+            # pd.set_option('display.max_columns', None)
+            print(nf)
+            con = engine.connect()
+            nf.to_sql('student', engine, if_exists= 'append', chunksize=1000)
+            con.close()
+            response = Util.manage_response(status=True, message='data added from the file successfully',
+                                                            log='data updated successfully', logger_obj=logger)
+            return Response(response, status.HTTP_200_OK)
+        except Exception as e:
+            response = Util.manage_response(status=False,
+                                            message=str(e),
                                             log=str(e), logger_obj=logger)
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")

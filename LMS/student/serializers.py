@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from .models import Student
+from .models import Student, StudentFile
 from account.models import User
 
 User = get_user_model()
@@ -16,4 +16,10 @@ class StudentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Student
+        fields = '__all__'
+
+class StudentFileSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = StudentFile
         fields = '__all__'

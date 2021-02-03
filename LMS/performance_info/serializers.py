@@ -11,4 +11,4 @@ class PerformanceInfoSerializer(ModelSerializer):
 class PerformanceInfoUpdateSerializer(ModelSerializer):
     class Meta:
         model = PerformanceInfo
-        fields = "score, assessment_week"
+        fields = ("score", "assessment_week")

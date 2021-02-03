@@ -1,6 +1,8 @@
 from django.db import models
 from account.models import User
+from django.core.files.storage import FileSystemStorage
 
+fs = FileSystemStorage(location='media/')
 
 class Student(models.Model):
     id = models.CharField(primary_key=True, max_length=10, default="SID000")
@@ -32,5 +34,7 @@ class Student(models.Model):
             self.id = "{}{}".format('SID', new_id)
         super().save(**kwargs)
 
+class StudentFile(models.Model):
+    student_details = models.FileField(storage=fs)
 
 
