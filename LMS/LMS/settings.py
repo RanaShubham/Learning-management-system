@@ -86,7 +86,7 @@ AUTHENTICATION_BACKENDS = (
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
-#FIXME:
+# FIXME:
 # DATABASES = {
 #     'default': {
 #         'ENGINE': config('DB_ENGINE'),
@@ -167,6 +167,7 @@ SWAGGER_SETTINGS = {
             'name': 'Authorization'
         }
     },
+
 }
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'profile_images')

@@ -66,15 +66,13 @@ class CreateStudent(generics.GenericAPIView):
             request.POST._mutable = False
             serializer = RegisterSerializer(data=request.data)
             if serializer.is_valid(raise_exception=True):
-                serializer.save()
-            user = User.objects.filter(email=serializer.data['email']).first()
+                user = serializer.save()
             Util.send_email(user)
             if not user:
                 raise LMSException(ExceptionType.NonExistentError, "No such user record found.",
                                    status.HTTP_404_NOT_FOUND)
             if Student.objects.filter(user=user.id).first():
                 raise LMSException(ExceptionType.StudentExist, "An account with this user already exists.",
-
                                    status.HTTP_400_BAD_REQUEST)
             request.POST._mutable = True
             request.data["user"] = user.id
@@ -92,6 +90,7 @@ class CreateStudent(generics.GenericAPIView):
             serializer = PerformanceInfoSerializer(data=request.data)
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
+            # TODO:loggers
             response = Util.manage_response(status=True,
                                             message='Student details added successfully.', data=serializer.data,
                                             log='Student details added successfully.', logger_obj=logger)
