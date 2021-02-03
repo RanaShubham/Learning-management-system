@@ -16,3 +16,4 @@ userReg/
 .pytest_cache
 *dump.rdb*
 *00*
+media
