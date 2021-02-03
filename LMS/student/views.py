@@ -50,7 +50,6 @@ class CreateStudent(generics.GenericAPIView):
         @rtype: status: boolean, message: str
         """
         try:
-
             current_user_role = kwargs.get('role')
             if current_user_role != 'admin':
                 raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.",
