@@ -7,6 +7,7 @@ from account.decorators import user_login_required
 from account.models import Role, User
 from mentor.models import Mentor
 from course.models import Course
+from services.logging import loggers
 from student.models import Student
 from account.utils import Util as account_utils
 from django.shortcuts import render
@@ -20,15 +21,7 @@ from .serializers import PerformanceInfoSerializer, PerformanceInfoUpdateSeriali
 
 # Create your views here.
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-formatter = logging.Formatter('%(asctime)s  %(name)s  %(levelname)s: %(message)s')
-
-file_handler = logging.FileHandler(os.path.abspath("loggers/log_accounts.log"))
-file_handler.setFormatter(formatter)
-
-logger.addHandler(file_handler)
+logger = loggers("performance_info")
 
 
 @method_decorator(user_login_required, name='dispatch')
@@ -228,3 +221,41 @@ class UpdatePerformanceInfo(generics.GenericAPIView):
                                                      log=str(e), logger=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+# class GetStudentCount(generics.GenericAPIView):
+#     """
+#     Created a class to get all students with mentor id and course id
+#     """
+#     serializer_class = PerformanceInfoSerializer
+#
+#     def get(self, request, **kwargs):
+#         """[To get number of students taken the respective course and mentor when logged in as admin.]
+#
+#         :param kwargs: [mandatory]:[string]requesting user's id generated from decoded token
+#         :return:Response with status of success and data if successful.
+#         """
+#         try:
+#             # current_user_role = kwargs.get('role')
+#             # if current_user_role != 'admin':
+#             #     raise LMSException(ExceptionType.UnauthorizedError, \
+#             #                        "You are not authorized to perform this operation.", status.HTTP_401_UNAUTHORIZED)
+#             performance = PerformanceInfo.objects.filter(Q(mentor_id=request.GET.get('mentor_id')),
+#                                                          Q(course_id=request.GET.get('course_id')))
+#             serializer = PerformanceInfoSerializer(performance)
+#             print(serializer.data)
+#             student_list = []
+#             for item in performance:
+#                 student = Student.objects.filter(id=item.student_id).first()
+#                 info = {"name": student.user.name, 'email': student.user.email}
+#                 student_list.append(info)
+#
+#             response = account_utils.manage_response(status=True, message='Retrieved details of students.',
+#                                                      log='Retrieved details of students', data=student_list,
+#                                                      logger_obj=logger)
+#             return Response(response, status=status.HTTP_200_OK)
+#         except LMSException as e:
+#             response = account_utils.manage_response(status=False, message=e.message, log=e.message, logger_obj=logger)
+#             return Response(response, e.status_code, content_type="application/json")
+#         except Exception as e:
+#             response = account_utils.manage_response(status=False, message="Something went wrong.Please try again",
+#                                                      log=str(e), logger_obj=logger)
+#             return Response(response, status=status.HTTP_400_BAD_REQUEST)

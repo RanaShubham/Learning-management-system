@@ -97,7 +97,7 @@ class CreateStudent(generics.GenericAPIView):
                                             log='Student details added successfully.', logger_obj=logger)
             return Response(response, status=status.HTTP_201_CREATED)
 
-        except Student.DoesNotExist as e:
+        except Course.DoesNotExist as e:
 
             response = Util.manage_response(status=False,
                                             message="Requested course does not exist",
