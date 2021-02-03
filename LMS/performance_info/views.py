@@ -2,10 +2,13 @@ from LMS.utils import admin_only
 import logging
 import os
 
+from django.db.models import Q
+
 from account.decorators import user_login_required
 from account.models import Role, User
 from mentor.models import Mentor
 from course.models import Course
+from services.logging import loggers
 from student.models import Student
 from account.utils import Util as account_utils
 from django.shortcuts import render
@@ -19,15 +22,7 @@ from .serializers import PerformanceInfoSerializer, PerformanceInfoUpdateSeriali
 
 # Create your views here.
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-formatter = logging.Formatter('%(asctime)s  %(name)s  %(levelname)s: %(message)s')
-
-file_handler = logging.FileHandler(os.path.abspath("loggers/log_accounts.log"))
-file_handler.setFormatter(formatter)
-
-logger.addHandler(file_handler)
+logger = loggers("performance_info")
 
 
 @method_decorator(user_login_required, name='dispatch')
@@ -45,13 +40,13 @@ class GetPerformanceInfo(generics.GenericAPIView):
         try:
             current_user_id = kwargs.get('userid')
             current_user_role = kwargs.get('role')
-            
-            if current_user_role != 'admin' and current_user_role != 'mentor':
-                raise LMSException(ExceptionType.UnauthorizedError,"You are not authorized to perform this operation."\
-                    ,status.HTTP_401_UNAUTHORIZED)
 
-            #If a mentor is accessing this API he should see the performance records
-            #of only those students whome he is mentoring.
+            if current_user_role != 'admin' and current_user_role != 'mentor':
+                raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation." \
+                                   , status.HTTP_401_UNAUTHORIZED)
+
+            # If a mentor is accessing this API he should see the performance records
+            # of only those students whome he is mentoring.
             if current_user_role == 'mentor':
                 current_user_mentor_id = Mentor.objects.get(user = current_user_id).id
                 performance_records = PerformanceInfo.objects.filter(mentor_id = current_user_mentor_id,\
@@ -73,8 +68,9 @@ class GetPerformanceInfo(generics.GenericAPIView):
                 each['mentor_name'] = each.mentor_id.user.name
                 each['course_name'] = each.course_id.name
 
-            response = account_utils.manage_response(status=True, message='Retrieved performance records.',data=serializer.data,
-                                            log='retrieved perfromance records', logger_obj=logger)
+            response = account_utils.manage_response(status=True, message='Retrieved performance records.',
+                                                     data=serializer.data,
+                                                     log='retrieved perfromance records', logger_obj=logger)
             return Response(response, status=status.HTTP_200_OK)
         except serializers.ValidationError as e:
             response = account_utils.manage_response(status=False, message=e.detail, log=e.detail, logger_obj=logger)
@@ -88,22 +84,24 @@ class GetPerformanceInfo(generics.GenericAPIView):
         #     response = account_utils.manage_response(status=False, message = "Student not found.", log=str(e), logger_obj=logger)
         #     return Response(response, status=status.HTTP_400_BAD_REQUEST)
         except Role.DoesNotExist as e:
-            response = account_utils.manage_response(status=False, message = "Please make sure that admin and mentor both roles are present.",
-                                                    log = str(e), logger_obj=logger)
+            response = account_utils.manage_response(status=False,
+                                                     message="Please make sure that admin and mentor both roles are present.",
+                                                     log=str(e), logger_obj=logger)
             return Response(response, status=status.HTTP_404_NOT_FOUND)
         except LMSException as e:
             response = account_utils.manage_response(status=False, message=e.message, log=e.message, logger_obj=logger)
             return Response(response, e.status_code, content_type="application/json")
         except Exception as e:
-            response = account_utils.manage_response(status=False, message="Something went wrong.Please try again", log=str(e), logger_obj=logger)
+            response = account_utils.manage_response(status=False, message="Something went wrong.Please try again",
+                                                     log=str(e), logger_obj=logger)
             return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @method_decorator(user_login_required, name='dispatch')
 class AddPerformanceInfo(generics.GenericAPIView):
     serializer_class = PerformanceInfoSerializer
-    def get_queryset(self):
-        pass
+
+    queryset = PerformanceInfo.objects.all()
 
     def post(self, request, **kwargs):
         """[To add performance record for a student when logged in as admin or mentor.]
@@ -122,12 +120,12 @@ class AddPerformanceInfo(generics.GenericAPIView):
             course_id = request.data.get("course_id")
             student_id = request.data.get("student_id")
 
-            #To make sure that a student is mapped to a course only once.
+            # To make sure that a student is mapped to a course only once.
             if PerformanceInfo.objects.filter(course_id=course_id, student_id=student_id):
                 logger.warning("Failed to add performance record because similrar performance record for the student\
                      already exists.")
                 raise LMSException(ExceptionType.PerformanceRecordExists, \
-                    "A performance record of this student for this course already exists.")
+                                   "A performance record of this student for this course already exists.")
 
             #If current user is not admin he can't add a performance record.
             if current_user_role != 'admin':
@@ -135,27 +133,29 @@ class AddPerformanceInfo(generics.GenericAPIView):
                 raise LMSException(ExceptionType.UnauthorizedError,\
                     "You are not authorized to perform this operation.",status.HTTP_401_UNAUTHORIZED)
 
-            #If current user is admin then he can simply add a valid performance record for anyone.
+            # If current user is admin then he can simply add a valid performance record for anyone.
             if current_user_role == 'admin':
                 serializer = PerformanceInfoSerializer(request.data)
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
-                response = account_utils.manage_response(status=True, message='Added performance record.',\
-                    log='Added perfromance record', logger_obj=logger)
+                response = account_utils.manage_response(status=True, message='Added performance record.', \
+                                                         log='Added perfromance record', logger_obj=logger)
                 return Response(response, status=status.HTTP_200_OK)
         except serializers.ValidationError as e:
             response = account_utils.manage_response(status=False, message=e.detail, log=e.detail, logger_obj=logger)
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            response = account_utils.manage_response(status=False, message = "Something went wrong.", \
-                log = str(e), logger = status.HTTP_500_INTERNAL_SERVER_ERROR)
+            response = account_utils.manage_response(status=False, message="Something went wrong.", \
+                                                     log=str(e), logger=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 @method_decorator(user_login_required, name='dispatch')
 class UpdatePerformanceInfo(generics.GenericAPIView):
     serializer_class = PerformanceInfoUpdateSerializer
-    def get_queryset(self):
-        pass
+
+    queryset = PerformanceInfo.objects.all()
+
     def patch(self, request, **kwargs):
         """[To update performance record for a student when logged in as mentor.]
 
@@ -175,16 +175,16 @@ class UpdatePerformanceInfo(generics.GenericAPIView):
                 raise LMSException(ExceptionType.UnauthorizedError,\
                     "You are not authorized to perform this operation.",status.HTTP_401_UNAUTHORIZED)
 
-            record_to_be_updated = PerformanceInfo.objects.get(id=record_id_to_be_updated, is_deleted = False)
-            serializer = PerformanceInfoUpdateSerializer(record_to_be_updated, data = request.data, partial = True)
+            record_to_be_updated = PerformanceInfo.objects.get(id=record_id_to_be_updated, is_deleted=False)
+            serializer = PerformanceInfoUpdateSerializer(record_to_be_updated, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            response = account_utils.manage_response(status=True, message='Updated performance record.',\
-                log='Updated perfromance record', logger_obj=logger)
+            response = account_utils.manage_response(status=True, message='Updated performance record.', \
+                                                     log='Updated perfromance record', logger_obj=logger)
             return Response(response, status=status.HTTP_200_OK)
         except PerformanceInfo.DoesNotExist as e:
-            response = account_utils.manage_response(status=False, message="Performance record does not exist.",\
-                 log=str(e), logger_obj=logger)
+            response = account_utils.manage_response(status=False, message="Performance record does not exist.", \
+                                                     log=str(e), logger_obj=logger)
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
         except serializers.ValidationError as e:
             response = account_utils.manage_response(status=False, message=e.detail, log=e.detail, logger_obj=logger)
@@ -210,17 +210,52 @@ class UpdatePerformanceInfo(generics.GenericAPIView):
             record_to_be_deleted.is_deleted = True
             #TODO: Add logging inside the views as well.
             record_to_be_deleted.save()
-            response = account_utils.manage_response(status=True, message='Deleted performance record.',\
-                log='Deleted perfromance record', logger_obj=logger)
+            response = account_utils.manage_response(status=True, message='Deleted performance record.', \
+                                                     log='Deleted perfromance record', logger_obj=logger)
             return Response(response, status=status.HTTP_200_OK)
         except LMSException as e:
             response = account_utils.manage_response(status=False, message=str(e),\
                  log=str(e), logger_obj=logger)
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
         except PerformanceInfo.DoesNotExist as e:
-            response = account_utils.manage_response(status=False, message="Performance record does not exist.",\
-                 log=str(e), logger_obj=logger)
+            response = account_utils.manage_response(status=False, message="Performance record does not exist.", \
+                                                     log=str(e), logger_obj=logger)
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             response = account_utils.manage_response(status=False, message = "Something went wrong.", \
                 log = str(e), logger = status.HTTP_500_INTERNAL_SERVER_ERROR)
+            response = account_utils.manage_response(status=False, message="Something went wrong.", \
+                                                     log=str(e), logger=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@method_decorator(user_login_required, name='dispatch')
+class GetStudentCount(generics.GenericAPIView):
+    """
+    Created a class to get all students with mentor id and course id
+    """
+    def get(self, request, **kwargs):
+        """[To get number of students taken the respective course and mentor when logged in as admin.]
+
+        :param kwargs: [mandatory]:[string]requesting user's id generated from decoded token
+        :return:Response with status of success and data if successful.
+        """
+        try:
+            if kwargs['role'] == 'admin':
+                performance = PerformanceInfo.objects.filter(mentor_id=request.GET.get('mentor_id')).filter(course_id=request.GET.get('course_id'))
+                if performance is None:
+                    raise LMSException(ExceptionType.NonExistentError, "No performance record matching the criteria", status.HTTP_404_NOT_FOUND)
+                student_list = []
+                for item in performance:
+                    student = Student.objects.filter(id=item.student_id).first()
+                    info = {"name": student.user.name, 'score': item.score}
+                    student_list.append(info)
+                response = account_utils.manage_response(status=True, message='Retrieved details of students.',
+                                                         log='Retrieved details of students', data=student_list,
+                                                         logger_obj=logger)
+                return Response(response, status=status.HTTP_200_OK)
+        except LMSException as e:
+            response = account_utils.manage_response(status=False, message=e.message, log=e.message, logger_obj=logger)
+            return Response(response, e.status_code, content_type="application/json")
+        except Exception as e:
+            response = account_utils.manage_response(status=False, message="Something went wrong.Please try again",
+                                                     log=str(e), logger_obj=logger)
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)

@@ -1,7 +1,8 @@
 from django.db import models
 
+
 class Course(models.Model):
-    id = models.CharField(primary_key=True, max_length=50, default="CID000")
+    id = models.CharField(primary_key=True, max_length=25, default="CID000")
     name = models.CharField(max_length=50, blank=False, null=False)
     price = models.FloatField(max_length=10, blank=False, null=False)
     duration = models.CharField(max_length=25, blank=False, null=False)

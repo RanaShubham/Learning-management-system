@@ -209,7 +209,6 @@ class LoginUser(generics.GenericAPIView):
         :return:login confirmation, authentication token containing user id and status code
         """
         try:
-
             serializer = LoginSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             logger.info('checking existing user with given email')

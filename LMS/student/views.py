@@ -5,6 +5,8 @@ from rest_framework.response import Response
 
 from LMS.utils import LMSException, ExceptionType
 from account.serializers import RegisterSerializer
+from course.models import Course
+from mentor.models import Mentor
 from services.logging import loggers
 from .serializers import StudentSerializer
 from .models import Student
@@ -25,7 +27,6 @@ logger = loggers("log_students.log")
 
 
 @method_decorator(user_login_required, name='dispatch')
-
 class CreateStudent(generics.GenericAPIView):
     """
     Created a class to register a student with user details together
@@ -85,6 +86,10 @@ class CreateStudent(generics.GenericAPIView):
             request.POST._mutable = True
             request.data["student_id"] = student_obj.id
             request.POST._mutable = False
+            if not Course.objects.filter(id=request.data['course_id']).first():
+                raise LMSException(ExceptionType.NonExistentError, "Course does not exist", status.HTTP_404_NOT_FOUND)
+            if not Mentor.objects.filter(id=request.data['mentor_id']).first():
+                raise LMSException(ExceptionType.NonExistentError, "Course does not exist", status.HTTP_404_NOT_FOUND)
             serializer = PerformanceInfoSerializer(data=request.data)
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
@@ -93,7 +98,7 @@ class CreateStudent(generics.GenericAPIView):
                                             log='Student details added successfully.', logger_obj=logger)
             return Response(response, status=status.HTTP_201_CREATED)
 
-        except Student.DoesNotExist as e:
+        except Course.DoesNotExist as e:
 
             response = Util.manage_response(status=False,
                                             message="Requested course does not exist",
@@ -219,7 +224,7 @@ class StudentDetails(generics.GenericAPIView):
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
-    def patch(self, request, *args, **kwargs):
+    def put(self, request, *args, **kwargs):
         """
         [updates the respective student data ]
         args: kwargs[pk]: user id of the user
