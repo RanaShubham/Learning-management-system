@@ -23,7 +23,7 @@ class Student(models.Model):
     year_of_masters = models.IntegerField(blank=True, default=None, null=True)
 
     def __str__(self):
-        return self.user.email
+        return self.id
 
     def save(self, **kwargs):
         if self.id == 'SID000':
