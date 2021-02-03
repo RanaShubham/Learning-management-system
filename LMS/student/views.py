@@ -3,7 +3,7 @@ from django.utils.decorators import method_decorator
 from rest_framework import status, generics
 from rest_framework.response import Response
 
-
+from LMS.utils import LMSException, ExceptionType
 from account.serializers import RegisterSerializer
 from services.logging import loggers
 from .serializers import StudentSerializer
