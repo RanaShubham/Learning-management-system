@@ -7,7 +7,7 @@ from django.conf.urls import url, re_path
 app_name = "account"
 
 urlpatterns = [
-    path('role', CreateRole.as_view(), name="post_role"),
+    path('role', CreateRole.as_view(), name="get_post_role"),
     path('users', GetUsers.as_view(), name="get_users"),
     path('user', RegisterUser.as_view(), name="post_user"),
     path('user/<int:pk>', UpdateUser.as_view(), name="update_delete_user"),

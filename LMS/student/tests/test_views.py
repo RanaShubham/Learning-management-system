@@ -27,6 +27,7 @@ class Data(TestCase):
         self.admin_register_user = reverse("account:post_user")
         self.student_register_url = reverse("student-register")
         self.single_student_url = reverse("student-details", kwargs={"pk": 2})
+        self.student_retrieval_url = reverse("student-retrieve")
 
         self.admin_login_data = {
             'email': 'adminpass@gmail.com',
@@ -108,4 +109,6 @@ class StudentDetailsTest(Data):
 
         response = self.client.post(self.student_register_url, self.invalid_student_form, HTTP_AUTHORIZATION=headers,
                                     format='json')
+
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+

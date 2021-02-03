@@ -5,7 +5,6 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 
-
 User = get_user_model()
 
 client = APIClient()
@@ -24,6 +23,9 @@ class Data(TestCase):
         self.admin_login_url = reverse("account:login_user")
         self.course_register_url = reverse("course-register")
         self.single_course_url = reverse("specific-course", kwargs={"pk": 1})
+        self.wrong_course_url = reverse("specific-course", kwargs={"pk": 10})
+        self.get_courses_url = reverse("courses-retrieve")
+        self.get_course_url = reverse("course-retrieve", kwargs={"pk": 1})
 
         self.admin_login_data = {
             'email': 'adminpass@gmail.com',
@@ -43,6 +45,10 @@ class Data(TestCase):
             "name": "maven",
             "duration": "6 months",
         }
+
+        self.invalid_patch_data = {
+            "pric": "9517"
+        }
         user = User.objects.create_superuser(name='admin', email='adminpass@gmail.com', phone_number='1234',
                                              password='adminpassword')
 
@@ -56,19 +62,17 @@ class CourseDetailsTest(Data):
                                     format='application/json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        response = self.client.get(self.single_course_url, HTTP_AUTHORIZATION=headers, format='json')
+        response = self.client.get(self.get_course_url, HTTP_AUTHORIZATION=headers, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        response = self.client.get(self.single_course_url, HTTP_AUTHORIZATION=headers, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response = self.client.get(self.get_courses_url, HTTP_AUTHORIZATION=headers, format='json')
 
-        response = self.client.get(reverse("courses-details"), HTTP_AUTHORIZATION=headers, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response = client.patch(self.single_course_url, self.valid_patch_data, HTTP_AUTHORIZATION=headers,
                                 format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response = client.delete(self.single_course_url, HTTP_AUTHORIZATION=headers,
-                                format='json')
+                                 format='json')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_course_with_invalid_details(self):
@@ -76,4 +80,39 @@ class CourseDetailsTest(Data):
         headers = response.__getitem__(header="HTTP_AUTHORIZATION")
         response = self.client.post(self.course_register_url, self.invalid_course_details, HTTP_AUTHORIZATION=headers,
                                     format='application/json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_course_with_empty_details(self):
+        response = self.client.post(self.admin_login_url, self.admin_login_data, format='application/json')
+        headers = response.__getitem__(header="HTTP_AUTHORIZATION")
+
+        response = self.client.get(self.single_course_url, HTTP_AUTHORIZATION=headers, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_course_with_invalid_details_patch(self):
+        response = self.client.post(self.admin_login_url, self.admin_login_data, format='application/json')
+        headers = response.__getitem__(header="HTTP_AUTHORIZATION")
+        response = self.client.post(self.course_register_url, self.invalid_course_details, HTTP_AUTHORIZATION=headers,
+                                    format='application/json')
+        response = client.patch(self.single_course_url, self.invalid_patch_data, HTTP_AUTHORIZATION=headers,
+                                format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_course_with_invalid_details_delete(self):
+        response = self.client.post(self.admin_login_url, self.admin_login_data, format='application/json')
+        headers = response.__getitem__(header="HTTP_AUTHORIZATION")
+        response = self.client.post(self.course_register_url, self.invalid_course_details, HTTP_AUTHORIZATION=headers,
+                                    format='application/json')
+        response = client.delete(self.wrong_course_url, HTTP_AUTHORIZATION=headers,
+                                 format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_course_with_invalid_details_sepcific_delete(self):
+        response = self.client.post(self.admin_login_url, self.admin_login_data, format='application/json')
+        headers = response.__getitem__(header="HTTP_AUTHORIZATION")
+        response = self.client.post(self.course_register_url, self.valid_course_details, HTTP_AUTHORIZATION=headers,
+                                    format='application/json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        response = client.delete(self.wrong_course_url, HTTP_AUTHORIZATION=headers,
+                                 format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

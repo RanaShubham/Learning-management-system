@@ -12,6 +12,6 @@ class TestUrls:
         assert resolve(path).view_name == "mentor:get_mentors"
 
     def test_get_or_delete_specific_mentor_url(self):
-        path = reverse("mentor:get_delete_mentor", kwargs={'pk': 1})
-        assert resolve(path).view_name == "mentor:get_delete_mentor"
+        path = reverse("mentor:get_update_delete_mentor", kwargs={'pk': 1})
+        assert resolve(path).view_name == "mentor:get_update_delete_mentor"
 

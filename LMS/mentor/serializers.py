@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from .models import Mentor
-from account.serializers import RegisterSerializer
 
 User = get_user_model()
 
@@ -13,6 +12,9 @@ class MentorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Mentor
-        fields = ['course','user']
+        fields = ['course','user', 'id']
+
+
+
 
 
