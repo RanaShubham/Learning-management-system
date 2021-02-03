@@ -33,6 +33,7 @@ class CreateStudent(generics.GenericAPIView):
     """
 
     serializer_class = StudentSerializer
+
     queryset = Student.objects.all()
 
     def post(self, request, **kwargs):
