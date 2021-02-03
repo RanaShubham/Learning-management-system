@@ -29,7 +29,7 @@ DEBUG = config('DEBUG')
 ALLOWED_HOSTS = ['*']
 
 # Application definition
-MODE = config('DEVELOPMENT')
+MODE = config('MODE')
 
 INSTALLED_APPS = [
     'django.contrib.admin',

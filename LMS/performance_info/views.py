@@ -268,7 +268,7 @@ class GetStudentCount(generics.GenericAPIView):
                 student = Student.objects.filter(id=item.student_id).first()
                 info = {'name': student.user.name, 'score': item.score}
                 student_list.append(info)
-            stud_dict = {'count': count, 'course_name': course_name, 'student_info': student_list}
+            stud_dict = {'total_students': count, 'course_name': course_name, 'student_info': student_list}
             response = account_utils.manage_response(status=True, message='Retrieved details of students.',
                                                      log='Retrieved details of students', data=stud_dict,
                                                      logger_obj=logger)
