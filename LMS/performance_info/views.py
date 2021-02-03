@@ -220,13 +220,11 @@ class UpdatePerformanceInfo(generics.GenericAPIView):
             response = account_utils.manage_response(status=False, message="Something went wrong.", \
                                                      log=str(e), logger=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
+@method_decorator(user_login_required, name='dispatch')
 class GetStudentCount(generics.GenericAPIView):
     """
     Created a class to get all students with mentor id and course id
     """
-    serializer_class = PerformanceInfoSerializer
-
     def get(self, request, **kwargs):
         """[To get number of students taken the respective course and mentor when logged in as admin.]
 
@@ -234,16 +232,19 @@ class GetStudentCount(generics.GenericAPIView):
         :return:Response with status of success and data if successful.
         """
         try:
-            performance = PerformanceInfo.objects.filter(mentor_id=request.GET.get('mentor_id')).filter(course_id=request.GET.get('course_id'))
-            student_list = []
-            for item in performance:
-                student = Student.objects.filter(id=item.student_id).first()
-                info = {"name": student.user.name, 'score': item.score}
-                student_list.append(info)
-            response = account_utils.manage_response(status=True, message='Retrieved details of students.',
-                                                     log='Retrieved details of students', data=student_list,
-                                                     logger_obj=logger)
-            return Response(response, status=status.HTTP_200_OK)
+            if kwargs['role'] == 'admin':
+                performance = PerformanceInfo.objects.filter(mentor_id=request.GET.get('mentor_id')).filter(course_id=request.GET.get('course_id'))
+                if performance is None:
+                    raise LMSException(ExceptionType.NonExistentError, "No performance record matching the criteria", status.HTTP_404_NOT_FOUND)
+                student_list = []
+                for item in performance:
+                    student = Student.objects.filter(id=item.student_id).first()
+                    info = {"name": student.user.name, 'score': item.score}
+                    student_list.append(info)
+                response = account_utils.manage_response(status=True, message='Retrieved details of students.',
+                                                         log='Retrieved details of students', data=student_list,
+                                                         logger_obj=logger)
+                return Response(response, status=status.HTTP_200_OK)
         except LMSException as e:
             response = account_utils.manage_response(status=False, message=e.message, log=e.message, logger_obj=logger)
             return Response(response, e.status_code, content_type="application/json")
