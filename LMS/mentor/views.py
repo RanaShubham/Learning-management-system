@@ -1,5 +1,5 @@
 from account.models import User, Role
-from rest_framework import status, generics
+from rest_framework import serializers, status, generics
 from rest_framework.response import Response
 from django.utils.decorators import method_decorator
 from account.decorators import user_login_required
@@ -208,10 +208,9 @@ class CreateMentor(generics.GenericAPIView):
                 if not course:
                     raise Course.DoesNotExist('No such course exists')
 
-            normalized_admission_role = request.data['role'].lower()
-            admission_role_obj = Role.objects.filter(role=normalized_admission_role).first()
+            admission_role_obj = Role.objects.filter(role='mentor').first()
             if not admission_role_obj:
-                raise LMSException(ExceptionType.RoleError, "{} is not a valid role.".format(normalized_admission_role),
+                raise LMSException(ExceptionType.RoleError, "mentor role does not exist.",
                                    status.HTTP_400_BAD_REQUEST)
 
             request.POST._mutable = True
@@ -242,8 +241,13 @@ class CreateMentor(generics.GenericAPIView):
                                             message="Requested course does not exist",
                                             log=str(e), logger_obj=logger)
 
-            return Response(response, status.HTTP_404_NOT_FOUND, content_type="application/json")
-
+            return Response(response, status.HTTP_404_NOT_FOUND, content_type="application/json") 
+            
+        except serializers.ValidationError as e:
+            response = Util.manage_response(status=False,
+                                            message=e.detail,
+                                            log="Bad request", logger_obj=logger)
+            return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
         except LMSException as e:
             response = Util.manage_response(status=False,
                                             message=e.message,
