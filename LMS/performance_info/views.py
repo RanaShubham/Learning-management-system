@@ -18,7 +18,7 @@ from rest_framework import generics, permissions, serializers, status
 from rest_framework.response import Response
 
 from .models import PerformanceInfo
-from .serializers import PerformanceInfoSerializer, PerformanceInfoUpdateSerializer
+from .serializers import GetPerformanceInfoSerializer, PerformanceInfoSerializer, PerformanceInfoUpdateSerializer
 
 # Create your views here.
 
@@ -29,8 +29,8 @@ logger = loggers("performance_info")
 class GetPerformanceInfo(generics.GenericAPIView):
     serializer_class = PerformanceInfoSerializer
 
-    queryset = PerformanceInfo.objects.all()
-
+    queryset = PerformanceInfo.objects.select_related("student_id", "mentor_id", "course_id")
+    
     def get(self, request, **kwargs):
         """[To get all accessible performance records when logged in as admin or mentor.]
 
@@ -52,23 +52,24 @@ class GetPerformanceInfo(generics.GenericAPIView):
             # of only those students whome he is mentoring.
             if current_user_role == 'mentor':
                 current_user_mentor_id = Mentor.objects.get(user = current_user_id).id
-                performance_records = PerformanceInfo.objects.filter(mentor_id = current_user_mentor_id,\
-                     is_deleted = False).select_related("student_id", "mentor_id", "course_id")
+                performance_records = PerformanceInfo.objects\
+                    .filter(mentor_id = current_user_mentor_id, is_deleted = False)\
+                        # .select_related("student_id", "mentor_id", "course_id")
                 logger.info('retrieving list of student performance data for the mentor.')
             else:
-                performance_records = PerformanceInfo.objects.filter(is_deleted=False)\
-                    .select_related("student_id", "mentor_id", "course_id")
+                performance_records = PerformanceInfo.objects.filter(is_deleted=False)
+                    # .select_related("student_id", "mentor_id", "course_id").values()
                 logger.info('retrieving list of student performance data for the admin.')
 
-            serializer = PerformanceInfoSerializer(performance_records, many=True)
-            #TODO: Check
+            serializer = GetPerformanceInfoSerializer(performance_records, many=True)
             for each in serializer.data:
-                # student_name = Student.objects.get(id = each.get('student_id')).user.name
-                # mentor_name =  Mentor.objects.get(id = each.get('mentor_id')).user.name
-                # course_name = Course.objecs.get(id = each.get('course_id')).name
-                each['student_name'] = each.student_id.user.name
-                each['mentor_name'] = each.mentor_id.user.name
-                each['course_name'] = each.course_id.name
+                each['student_name'] = each.get('student_id').get('user').get('name')
+                each['mentor_name'] = each.get('mentor_id').get('user').get('name')
+                each['course_name'] = each.get('course_id').get('name')
+
+                each['student_id'] = each.get('student_id').get('id')
+                each['mentor_id'] = each.get('mentor_id').get('id')
+                each['course_id'] = each.get('course_id').get('id')
 
             response = account_utils.manage_response(status=True, message='Retrieved performance records.',
                                                      data=serializer.data,
@@ -85,7 +86,7 @@ class GetPerformanceInfo(generics.GenericAPIView):
             response = account_utils.manage_response(status=False, message=e.message, log=e.message, logger_obj=logger)
             return Response(response, e.status_code, content_type="application/json")
         except Exception as e:
-            response = account_utils.manage_response(status=False, message="Something went wrong.Please try again",
+            response = account_utils.manage_response(status=False, message=str(e),
                                                      log=str(e), logger_obj=logger)
             return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -117,21 +118,13 @@ class AddPerformanceInfo(generics.GenericAPIView):
 
             # To make sure that a student is mapped to a course only once.
             if PerformanceInfo.objects.filter(course_id=course_id, student_id=student_id):
-                logger.warning("Failed to add performance record because similrar performance record for the student\
+                logger.warning("Failed to add performance record because similar performance record for the student\
                      already exists.")
                 raise LMSException(ExceptionType.PerformanceRecordExists, \
                                    "A performance record of this student for this course already exists.",\
                                        status.HTTP_400_BAD_REQUEST)
 
-            # #If current user is not admin he can't add a performance record.
-            # if current_user_role != 'admin':
-            #     logger.warning("Admin access allowed only.")
-            #     raise LMSException(ExceptionType.UnauthorizedError,\
-            #         "You are not authorized to perform this operation.",status.HTTP_401_UNAUTHORIZED)
-
-            # If current user is admin then he can simply add a valid performance record for anyone.
-            # if current_user_role == 'admin':
-            serializer = PerformanceInfoSerializer(request.data)
+            serializer = PerformanceInfoSerializer(data = request.data)
             serializer.is_valid(raise_exception=True)
             logger.info('Added performance record.')
             serializer.save()
@@ -139,13 +132,13 @@ class AddPerformanceInfo(generics.GenericAPIView):
                                                         log='Added perfromance record', logger_obj=logger)
             return Response(response, status=status.HTTP_200_OK)
         except LMSException as e:
-            response = account_utils.manage_response(status=False, message=e.detail, log=e.detail, logger_obj=logger)
+            response = account_utils.manage_response(status=False, message=str(e), log=str(e), logger_obj=logger)
             return Response(response, status=e.status_code)
         except serializers.ValidationError as e:
             response = account_utils.manage_response(status=False, message=e.detail, log=e.detail, logger_obj=logger)
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            response = account_utils.manage_response(status=False, message="Something went wrong.", \
+            response = account_utils.manage_response(status=False, message=str(e), \
                                                      log=str(e), logger=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
