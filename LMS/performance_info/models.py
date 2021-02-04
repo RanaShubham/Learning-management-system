@@ -18,3 +18,6 @@ class PerformanceInfo(models.Model):
     def soft_delete(self):
         self.is_deleted = True
         self.save()
+
+    def __str__(self):
+        return str(self.course_id)+str(self.student_id)
