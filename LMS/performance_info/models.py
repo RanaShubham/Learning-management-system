@@ -3,6 +3,10 @@ from student.models import Student
 from course.models import Course
 from django.db import models
 from mentor.models import Mentor
+from django.core.files.storage import FileSystemStorage
+
+fs = FileSystemStorage(location='media/')
+
 
 
 # Create your models here.
@@ -18,3 +22,6 @@ class PerformanceInfo(models.Model):
     def soft_delete(self):
         self.is_deleted = True
         self.save()
+
+class PerformanceFile(models.Model):
+    performance = models.FileField(storage=fs)

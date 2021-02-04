@@ -1,7 +1,7 @@
 from django.db import models
 from rest_framework import fields
 from rest_framework.serializers import ModelSerializer
-from .models import PerformanceInfo
+from .models import PerformanceInfo, PerformanceFile
 
 
 class PerformanceInfoSerializer(ModelSerializer):
@@ -14,3 +14,8 @@ class PerformanceInfoUpdateSerializer(ModelSerializer):
     class Meta:
         model = PerformanceInfo
         fields = ('assessment_week', 'score')
+
+class PerformanceFileSerializer(ModelSerializer):
+    class Meta:
+        model = PerformanceFile
+        fields = "__all__"
