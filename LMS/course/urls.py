@@ -6,5 +6,5 @@ urlpatterns = [
     path('course/<int:pk>/', views.CourseView.as_view(), name="specific-course"),
     path('courses/', views.retrieve_courses, name="courses-retrieve"),
     path('specific-course/<int:pk>/', views.retrieve_course, name="course-retrieve"),
-    path('courses-data/', views.CoursePerformanceDetails.as_view(), name="courses-data"),
+    path('performance/courses/', views.CoursePerformanceDetails.as_view(), name="courses-data"),
 ]
