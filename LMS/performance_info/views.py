@@ -194,7 +194,7 @@ class UpdatePerformanceInfo(generics.GenericAPIView):
                 if not record_to_be_updated:
                     raise LMSException(ExceptionType.NoPerformanceRecord,\
                         "No performance record was found.", status.HTTP_400_BAD_REQUEST)
-                        
+
                 serializer = PerformanceInfoSerializer(record_to_be_updated, data=request.data, partial=True)
                 serializer.is_valid(raise_exception=True)
                 logger.info('Updated performance record by admin.')
@@ -202,7 +202,9 @@ class UpdatePerformanceInfo(generics.GenericAPIView):
                 response = account_utils.manage_response(status=True, message='Updated performance record.', \
                                                         log='Updated performance record.', logger_obj=logger)
                 return Response(response, status=status.HTTP_200_OK)
-
+        except LMSException as e:
+            response = account_utils.manage_response(status=False, message="Performance record does not exist.", \
+                                                     log=str(e), logger_obj=logger)
         except PerformanceInfo.DoesNotExist as e:
             response = account_utils.manage_response(status=False, message="Performance record does not exist.", \
                                                      log=str(e), logger_obj=logger)
