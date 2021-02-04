@@ -2,11 +2,14 @@ import logging
 import os
 
 from django.db.models import Q
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 
 from account.decorators import user_login_required
 from account.models import Role, User
 from mentor.models import Mentor
 from course.models import Course
+from services.logging import loggers
 from student.models import Student
 from account.utils import Util as account_utils
 from django.shortcuts import render
@@ -16,19 +19,11 @@ from rest_framework import generics, permissions, serializers, status
 from rest_framework.response import Response
 
 from .models import PerformanceInfo
-from .serializers import PerformanceInfoSerializer, PerformanceInfoUpdateSerializer
+from .serializers import PerformanceInfoSerializer, PerformanceInfoUpdateSerializer, GetStudentCountSerializer
 
 # Create your views here.
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-formatter = logging.Formatter('%(asctime)s  %(name)s  %(levelname)s: %(message)s')
-
-file_handler = logging.FileHandler(os.path.abspath("loggers/log_accounts.log"))
-file_handler.setFormatter(formatter)
-
-logger.addHandler(file_handler)
+logger = loggers("performance_info")
 
 
 @method_decorator(user_login_required, name='dispatch')
@@ -228,3 +223,60 @@ class UpdatePerformanceInfo(generics.GenericAPIView):
                                                      log=str(e), logger=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+# @method_decorator(user_login_required, name='dispatch')
+class GetStudentCount(generics.GenericAPIView):
+    """
+    Created a class to get all students with mentor id and course id
+    """
+    serializer_class = GetStudentCountSerializer
+
+    mentor_param_config = openapi.Parameter(
+        'mentor_id', in_=openapi.IN_QUERY, description='Description', type=openapi.TYPE_STRING)
+    course_param_config = openapi.Parameter(
+        'course_id', in_=openapi.IN_QUERY, description='Description', type=openapi.TYPE_STRING)
+
+    @swagger_auto_schema(manual_parameters=[mentor_param_config, course_param_config])
+    def get(self, request, **kwargs):
+        """
+        [To get number of students taken the respective course and mentor when logged in as admin.]
+        :param kwargs: [mandatory]:[string]requesting user's id generated from decoded token
+        :return:Response with status of success and data if successful.
+
+        "parameters": [
+        {
+            "name": "performance/mentor",
+            "in": "query",
+            "description": "The performance info that needs to be fetched.",
+            "type": "string"
+        }
+    ]
+        """
+        try:
+            # if kwargs['role'] == 'admin':
+            performance = PerformanceInfo.objects.filter(mentor_id=request.GET.get('mentor_id')).filter(
+                course_id=request.GET.get('course_id'))
+            if performance is None:
+                raise LMSException(ExceptionType.NonExistentError, "No performance record matching the criteria",
+                                   status.HTTP_404_NOT_FOUND)
+
+            count = performance.count()
+            performance_obj = PerformanceInfo.objects.filter(mentor_id=request.GET.get('mentor_id')).filter(
+                course_id=request.GET.get('course_id')).first()
+            course_name = performance_obj.course_id.name
+            student_list = []
+            for item in performance:
+                student = Student.objects.filter(id=item.student_id).first()
+                info = {'name': student.user.name, 'score': item.score}
+                student_list.append(info)
+            stud_dict = {'total_students': count, 'course_name': course_name, 'student_info': student_list}
+            response = account_utils.manage_response(status=True, message='Retrieved details of students.',
+                                                     log='Retrieved details of students', data=stud_dict,
+                                                     logger_obj=logger)
+            return Response(response, status=status.HTTP_200_OK)
+        except LMSException as e:
+            response = account_utils.manage_response(status=False, message=e.message, log=e.message, logger_obj=logger)
+            return Response(response, e.status_code, content_type="application/json")
+        except Exception as e:
+            response = account_utils.manage_response(status=False, message="Something went wrong.Please try again",
+                                                     log=str(e), logger_obj=logger)
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
