@@ -1,27 +1,21 @@
-from django.db.models import Q
-from django.utils.decorators import method_decorator
-from rest_framework import status, generics
-from rest_framework.response import Response
-
-from LMS.utils import LMSException, ExceptionType
-from account.serializers import RegisterSerializer
-from course.models import Course
-from mentor.models import Mentor
-from services.logging import loggers
-from .serializers import StudentSerializer
-from .models import Student
-from django.utils.decorators import method_decorator
 from account.decorators import user_login_required
-from account.models import User, Role
-from django.db.models import Q
-from LMS.utils import *
-
+from account.models import Role, User
+from account.serializers import RegisterSerializer
 from account.utils import Util
+from course.models import Course
+from django.db.models import Q
+from django.utils.decorators import method_decorator
+from LMS.utils import *
+from LMS.utils import ExceptionType, LMSException
+from mentor.models import Mentor
+from performance_info.serializers import *
+from performance_info.serializers import PerformanceInfoSerializer
+from rest_framework import generics, serializers, status
+from rest_framework.response import Response
 from services.logging import loggers
+
 from .models import Student
 from .serializers import StudentSerializer
-
-from performance_info.serializers import *
 
 logger = loggers("log_students.log")
 
@@ -57,10 +51,10 @@ class CreateStudent(generics.GenericAPIView):
             if current_user_role != 'admin':
                 raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.",
                                    status.HTTP_401_UNAUTHORIZED)
-            normalized_admission_role = request.data['role'].lower()
-            admission_role_obj = Role.objects.filter(role=normalized_admission_role).first()
+
+            admission_role_obj = Role.objects.filter(role='student').first()
             if not admission_role_obj:
-                raise LMSException(ExceptionType.RoleError, "{} is not a valid role.".format(normalized_admission_role),
+                raise LMSException(ExceptionType.RoleError, "student role does not exist yet.",
                                    status.HTTP_400_BAD_REQUEST)
 
             request.POST._mutable = True
@@ -82,10 +76,11 @@ class CreateStudent(generics.GenericAPIView):
             request.data["user"] = user.id
             request.POST._mutable = False
             serializer = StudentSerializer(data=request.data)
+            student_obj = None
             if serializer.is_valid(raise_exception=True):
                 student_obj = serializer.save()
             request.POST._mutable = True
-            request.data["student_id"] = student_obj.id
+            request.data["id"] = student_obj.id
             request.POST._mutable = False
             if not Course.objects.filter(id=request.data['course_id']).first():
                 raise LMSException(ExceptionType.NonExistentError, "Course does not exist", status.HTTP_404_NOT_FOUND)
@@ -99,8 +94,14 @@ class CreateStudent(generics.GenericAPIView):
                                             log='Student details added successfully.', logger_obj=logger)
             return Response(response, status=status.HTTP_201_CREATED)
 
-        except Course.DoesNotExist as e:
+        except serializers.ValidationError as e:
+            response = Util.manage_response(status=False,
+                                            message=e.detail,
+                                            log=str(e), logger_obj=logger)
 
+            return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
+
+        except Course.DoesNotExist as e:
             response = Util.manage_response(status=False,
                                             message="Requested course does not exist",
                                             log=str(e), logger_obj=logger)
@@ -140,7 +141,7 @@ class StudentsDetails(generics.GenericAPIView):
                 serializer = StudentSerializer(student_list, many=True)
                 student_data_list = []
                 for item in serializer.data:
-                    student_details = User.objects.get(id=item['student_id'])
+                    student_details = User.objects.get(id=item['user'])
                     data = {'name': student_details.name, 'email': student_details.email,
                             'phone_number': student_details.phone_number}
                     data.update(item)
@@ -168,7 +169,7 @@ class StudentsDetails(generics.GenericAPIView):
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
         except Exception as e:
             response = Util.manage_response(status=False,
-                                            message="some other issue occurred",
+                                            message=str(e),
                                             log=str(e), logger_obj=logger)
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
@@ -189,10 +190,10 @@ class StudentDetails(generics.GenericAPIView):
         """
         try:
             user = User.objects.get(id=kwargs['userid'])  # requesting user:admin/student
-            student_details = Student.objects.filter(Q(student_id=kwargs['pk'])).first()
+            student_details = Student.objects.filter(Q(id=kwargs['pk'])).first()
             if student_details is None:
                 raise LMSException(ExceptionType.StudentNotFound, 'No such student found', status.HTTP_400_BAD_REQUEST)
-            elif student_details.student_id == user.id or kwargs['role'] == 'admin':
+            elif student_details.user.id == user.id or kwargs['role'] == 'admin':
                 serializer = StudentSerializer(student_details)
                 data = {'name': student_details.user.name, 'email': student_details.user.email,
                         'phone_number': student_details.user.phone_number}
@@ -237,7 +238,7 @@ class StudentDetails(generics.GenericAPIView):
             if kwargs['role'] == 'student':
                 if kwargs['pk'] == kwargs['userid']:
                     user = User.objects.get(id=kwargs['userid'])
-                    details = Student.objects.filter(Q(student_id=user.id)).first()
+                    details = Student.objects.filter(Q(user=user)).first()
                     if details is None:
                         raise LMSException(ExceptionType.UserException,
                                            "You have not registered your education details.",
