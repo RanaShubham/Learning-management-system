@@ -153,31 +153,48 @@ class UpdatePerformanceInfo(generics.GenericAPIView):
         """[To update performance record for a student when logged in as mentor.]
 
         :param kwargs: [mandatory]:[string] requesting user's id generated from decoded token.
-                        [manadatory]:[String] course id of the course that is to be updated.
         :param request: [optional]:[Integer]:[Assesment_week] Assesment week for the student. Default will be set to 1.
                       : [optional]:[Float]:[Score] Score value of student performance. Default will be set to 00.00
+                      : [manadatory]: [str]: [student id] student id of the student whose record is to be updated.
+                      : [manadatory]: [str]: [course id] course id of the course whose evaluation score is to be updated.
         :return:Response with status of success and data if successful.
         """
         try:
             current_user_role = kwargs.get('role')
-            record_id_to_be_updated = kwargs.get("performance_id")
-
-            #If current user is not mentor or he can't update a performance record.
+            current_user_id = kwargs.get('userid')
+            #If current user is not mentor or admin he can't update a performance record.
             if current_user_role != 'mentor' and current_user_role != 'admin':
                 raise LMSException(ExceptionType.UnauthorizedError,\
                     "You are not authorized to perform this operation.",status.HTTP_401_UNAUTHORIZED)
 
+            student_id = request.get('student_id')
+            course_id = request.get('course_id')
+
             if current_user_role == 'mentor':
-                record_to_be_updated = PerformanceInfo.objects.get(id=record_id_to_be_updated, is_deleted=False)
-                serializer = PerformanceInfoUpdateSerializer(record_to_be_updated, data=request.data, partial=True)
-                serializer.is_valid(raise_exception=True)
+                mentor_id = Mentor.objects.get(user = current_user_id).id
+                record_to_be_updated = PerformanceInfo.objects.get(course_id = course_id, \
+                                                    student_id = student_id, mentor_id = mentor_id, is_deleted=False)
+                if record_to_be_updated and request.data.get('score'):
+                    record_to_be_updated.update(score = request.data.get('score'))
+                else:
+                    raise LMSException(ExceptionType.NoPerformanceRecord,\
+                        "No performance record was found.", status.HTTP_400_BAD_REQUEST)
+
+                if record_to_be_updated and request.data.get('assessment_week'):
+                    record_to_be_updated.update(assessment_week = request.data.get('assessment_week'))
+
                 logger.info('Updated performance record by a mentor.')
-                serializer.save()
                 response = account_utils.manage_response(status=True, message='Updated performance record.', \
                                                         log='Updated perfrormance record.', logger_obj=logger)
                 return Response(response, status=status.HTTP_200_OK)
             else:
-                record_to_be_updated = PerformanceInfo.objects.get(id=record_id_to_be_updated, is_deleted=False)
+                record_to_be_updated = PerformanceInfo.objects.get(course_id = course_id, \
+                                                    student_id = student_id, is_deleted=False)
+
+                if not record_to_be_updated:
+                    raise LMSException(ExceptionType.NoPerformanceRecord,\
+                        "No performance record was found.", status.HTTP_400_BAD_REQUEST)
+                        
                 serializer = PerformanceInfoSerializer(record_to_be_updated, data=request.data, partial=True)
                 serializer.is_valid(raise_exception=True)
                 logger.info('Updated performance record by admin.')
