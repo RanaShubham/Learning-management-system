@@ -40,7 +40,7 @@ class Data(TestCase):
         self.role_data = {'role_id':2,
                           'role':"mentor"
                          }
-        self.valid_patch_data = {'course': [1,2]}
+        self.valid_patch_data = {'course': ['CID001','CID002']}
         self.invalid_user_patch_data = {'user':3}
         self.invalid_course_patch_data = {'course': [3]}
 
@@ -57,21 +57,21 @@ class Data(TestCase):
                             }
 
         self.valid_mentor_data = {'name': "mentorZ",
-                                  'role': "mentor",
+                                  'role': 2,
                                   'email': "mentorZ@gmail.com",
                                   'phone_number': '123456789',
-                                  'course': [1]}
+                                  'course': ["CID001","CID002"]}
 
         self.invalid_mentor_data = {'name': "mentorZ",
-                                  'role': "mentor",
+                                  'role': 2,
                                   'email': "mentorZ@gmail.com",
                                   'phone_number': '123456789',
-                                    'course': [4]}
+                                    'course': ['CID004']}
         self.invalid_role_mentor_data = {'name': "mentorZ",
-                                    'role': "student",
+                                    'role': 3,
                                     'email': "mentorZ@gmail.com",
                                     'phone_number': '123456789',
-                                    'course': [1]}
+                                    'course': ['CID001']}
 
 
     def test_admin_get_all_users(self):

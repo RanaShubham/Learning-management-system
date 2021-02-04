@@ -64,7 +64,6 @@ class UpdateUser(generics.GenericAPIView):
         """
 
         try:
-            current_user_id = kwargs.get('userid')
             current_user_role = kwargs.get('role')
             update_user = User.objects.filter(id=kwargs.get('pk')).exclude(is_deleted=True).first()
             if not update_user:  # if user to be updated isn't in database
@@ -142,11 +141,11 @@ class RegisterUser(generics.GenericAPIView):
     queryset = User.objects.all()
 
     def post(self, request, **kwargs):
-        """[create User for user by taking in user details]
+        """[create admin account taking in personal details]
 
         :param kwargs: [mandatory]:[string]dictionary containing requesting user's id generated from decoded token
-        :param request:[mandatory]: name,email,role,phone_number of user to be created
-        :return:creation confirmation and status code.Email is sent to host email User.
+        :param request:[mandatory]: name[string],email[string],role[integer],phone_number[string] of user to be created
+        :return:creation confirmation and status code.Email is sent to host email user.
         """
 
         try:
@@ -155,16 +154,6 @@ class RegisterUser(generics.GenericAPIView):
                 raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.",
                                    status.HTTP_401_UNAUTHORIZED)
 
-            normalized_admission_role = request.data['role'].lower()
-            admission_role_obj = Role.objects.filter(role=normalized_admission_role).first()
-
-            if not admission_role_obj:
-                raise LMSException(ExceptionType.RoleError, "{} is not a valid role.".format(normalized_admission_role),
-                                   status.HTTP_400_BAD_REQUEST)
-
-            request.POST._mutable = True
-            request.data['role'] = admission_role_obj.pk
-            request.POST._mutable = False
             logger.info('posting new user with incoming details')
             serializer = RegisterSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)

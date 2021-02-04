@@ -12,11 +12,7 @@ User = get_user_model()
 @pytest.mark.django_db
 class Data(TestCase):
     """
-<<<<<<< HEAD
-    initialises all the urls and data 
-=======
     initialises all the urls and data
->>>>>>> updatedmentor
     """
 
     def setUp(self):
@@ -48,7 +44,7 @@ class Data(TestCase):
         self.invalid_email_data = {'email': "admin1@email.com"}
 
         self.valid_registration_data = {'name': "adam",
-                                        'role': "mentor",
+                                        'role': 2,
                                         'email': "adam@gmail.com",
                                         'phone_number': '123456789'
                                         }
@@ -57,7 +53,7 @@ class Data(TestCase):
                                         'phone_number': '123456789'
                                         }
         self.invalid_registration_data2 = {
-                                            'role': "admin",
+                                            'role': 1,
                                            'email': "qwerty@gmail.com",
                                            'phone_number': '123456789'
                                            }
