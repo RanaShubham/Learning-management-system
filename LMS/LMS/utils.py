@@ -1,5 +1,5 @@
 import enum
-
+from rest_framework import status
 
 class ExceptionType(enum.Enum):
     UserException = "Cannot create user instance."
@@ -9,6 +9,7 @@ class ExceptionType(enum.Enum):
     StudentExist = "student already exist"
     MentorExists = "mentor already exists"
     PerformanceRecordExists = "Performance record of the student for this course already exiits."
+    
 
 class LMSException(Exception):
     """[Custom exception.]
@@ -24,3 +25,11 @@ class LMSException(Exception):
 
     def __str__(self):
         return self.message
+
+def admin_only(func):
+    def wrapper(*args, **kwargs):
+        if kwargs.get('role') != 'admin':
+            raise LMSException(ExceptionType.UnauthorizedError, "Only admin access allowed", status.HTTP_401_UNAUTHORIZED)
+        return func(*args, **kwargs)
+    
+    return wrapper

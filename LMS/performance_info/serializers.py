@@ -9,6 +9,11 @@ class PerformanceInfoSerializer(ModelSerializer):
         model = PerformanceInfo
         fields = "__all__"
 
+class GetPerformanceInfoSerializer(ModelSerializer):
+    class Meta:
+        model = PerformanceInfo
+        fields = "__all__"
+        depth = 2
 
 class PerformanceInfoUpdateSerializer(ModelSerializer):
     class Meta:
