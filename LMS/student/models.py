@@ -39,3 +39,10 @@ class Student(models.Model):
     def soft_delete(self):
         self.is_deleted = True
         self.save()
+
+class StudentCreate(models.Model):
+    email = models.EmailField(max_length=128, unique=True)
+    name = models.CharField(max_length=32, blank=False, null=False)
+    phone_number = models.CharField(max_length=10, blank=False, null=False)
+    course_id = models.CharField(max_length=32, blank=False, null=False)
+    mentor_id = models.CharField(max_length=32, blank=False, null=False)

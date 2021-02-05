@@ -16,7 +16,7 @@ from rest_framework.response import Response
 from services.logging import loggers
 
 from .models import Student
-from .serializers import StudentSerializer
+from .serializers import RegisterStudentSerializer, StudentSerializer
 import base64
 
 logger = loggers("log_students.log")
@@ -28,7 +28,7 @@ class CreateStudent(generics.GenericAPIView):
     Created a class to register a student with user details together
     """
 
-    serializer_class = StudentSerializer
+    serializer_class = RegisterStudentSerializer
 
     queryset = Student.objects.all()
 
