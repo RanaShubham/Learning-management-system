@@ -23,6 +23,7 @@ class Student(models.Model):
     year_of_job_experience = models.IntegerField(blank=True, default=None, null=True)
     masters_degree_start_year = models.IntegerField(blank=True, default=None, null=True)
     masters_degree_graduation_year = models.IntegerField(blank=True, default=None, null=True)
+    is_deleted = models.BooleanField(default=False, blank=True, null=True)
 
 
     def __str__(self):
@@ -35,5 +36,14 @@ class Student(models.Model):
             self.id = "{}{}".format('SID', new_id)
         super().save(**kwargs)
 
+    def soft_delete(self):
+        self.is_deleted = True
+        self.save()
 
 
+class StudentCreate(models.Model):
+    email = models.EmailField(max_length=128, unique=True)
+    name = models.CharField(max_length=32, blank=False, null=False)
+    phone_number = models.CharField(max_length=10, blank=False, null=False)
+    course_id = models.CharField(max_length=32, blank=False, null=False)
+    mentor_id = models.CharField(max_length=32, blank=False, null=False)

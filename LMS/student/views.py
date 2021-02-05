@@ -7,7 +7,7 @@ from account.serializers import RegisterSerializer
 from course.models import Course
 from mentor.models import Mentor
 from services.logging import loggers
-from .serializers import StudentSerializer
+from .serializers import StudentSerializer, RegisterStudentSerializer
 from .models import Student
 from django.utils.decorators import method_decorator
 from account.decorators import user_login_required
@@ -31,7 +31,7 @@ class CreateStudent(generics.GenericAPIView):
     Created a class to register a student with user details together
     """
 
-    serializer_class = StudentSerializer
+    serializer_class = RegisterStudentSerializer
     queryset = Student.objects.all()
 
     def post(self, request, **kwargs):
@@ -54,10 +54,9 @@ class CreateStudent(generics.GenericAPIView):
             if current_user_role != 'admin':
                 raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.",
                                    status.HTTP_401_UNAUTHORIZED)
-            normalized_admission_role = request.data['role'].lower()
-            admission_role_obj = Role.objects.filter(role=normalized_admission_role).first()
+            admission_role_obj = Role.objects.filter(role='student').first()
             if not admission_role_obj:
-                raise LMSException(ExceptionType.RoleError, "{} is not a valid role.".format(normalized_admission_role),
+                raise LMSException(ExceptionType.RoleError, "{} is not a valid role.".format('student'),
                                    status.HTTP_400_BAD_REQUEST)
 
             request.POST._mutable = True
@@ -70,9 +69,6 @@ class CreateStudent(generics.GenericAPIView):
             if not user:
                 raise LMSException(ExceptionType.NonExistentError, "No such user record found.",
                                    status.HTTP_404_NOT_FOUND)
-            if Student.objects.filter(user=user.id).first():
-                raise LMSException(ExceptionType.StudentExist, "An account with this user already exists.",
-                                   status.HTTP_400_BAD_REQUEST)
             request.POST._mutable = True
             request.data["user"] = user.id
             request.POST._mutable = False
@@ -89,7 +85,6 @@ class CreateStudent(generics.GenericAPIView):
             serializer = PerformanceInfoSerializer(data=request.data)
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
-            # TODO:loggers
             response = Util.manage_response(status=True,
                                             message='Student details added successfully.', data=serializer.data,
                                             log='Student details added successfully.', logger_obj=logger)
@@ -112,6 +107,63 @@ class CreateStudent(generics.GenericAPIView):
         except Exception as e:
             response = Util.manage_response(status=False,
                                             message="Something went wrong.Please try again",
+                                            log=str(e), logger_obj=logger)
+
+            return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
+
+    def put(self, request, *args, **kwargs):
+        """
+        [updates the respective student data ]
+        args: kwargs[pk]: user id of the user
+        Returns:
+            Response: status , message and data
+            @type: status: Boolean, message:str, data: list
+        """
+        try:
+            if kwargs['role'] == 'student':
+                user = User.objects.get(id=kwargs['userid'])
+                details = Student.objects.filter(Q(user=user.id)).first()
+                if details is None:
+                    raise LMSException(ExceptionType.UserException,
+                                       "You have not registered your education details.",
+                                       status.HTTP_401_UNAUTHORIZED)
+                data = request.data
+                request.POST._mutable = True
+                request.data["user"] = user.id
+                request.POST._mutable = False
+                serializer = StudentSerializer(details, data=data, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    data = {'name': user.name, 'email': user.email,
+                            'phone_number': user.phone_number}
+                    data.update(serializer.data)
+                    response = Util.manage_response(status=True, message='data updated successfully',
+                                                    data=data,
+                                                    log='data updated successfully', logger_obj=logger)
+                    return Response(response, status.HTTP_200_OK)
+                response = Util.manage_response(status=False,
+                                                message='please enter the valid details',
+                                                log='please enter the valid details', logger_obj=logger)
+                return Response(response, status.HTTP_400_BAD_REQUEST)
+            else:
+                raise LMSException(ExceptionType.UserException,
+                                   "Sorry,you are not student to perform this operation.",
+                                   status.HTTP_401_UNAUTHORIZED)
+        except LMSException as e:
+            response = Util.manage_response(status=False,
+                                            message=e.message,
+                                            log=str(e), logger_obj=logger)
+
+            return Response(response, e.status_code, content_type="application/json")
+        except Student.DoesNotExist:
+            response = Util.manage_response(status=False,
+                                            message='The student does not exist',
+                                            log='The student does not exist', logger_obj=logger)
+
+            return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
+        except Exception as e:
+            response = Util.manage_response(status=False,
+                                            message="some other issue occurred",
                                             log=str(e), logger_obj=logger)
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
@@ -185,7 +237,7 @@ class StudentDetails(generics.GenericAPIView):
         """
         try:
             user = User.objects.get(id=kwargs['userid'])  # requesting user:admin/student
-            student_details = Student.objects.filter(Q(student_id=kwargs['pk'])).first()
+            student_details = Student.objects.filter(Q(id=kwargs['pk'])).first()
             if student_details is None:
                 raise LMSException(ExceptionType.StudentNotFound, 'No such student found', status.HTTP_400_BAD_REQUEST)
             elif student_details.student_id == user.id or kwargs['role'] == 'admin':
@@ -221,51 +273,27 @@ class StudentDetails(generics.GenericAPIView):
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
-    def put(self, request, *args, **kwargs):
+
+    def delete(self, request, **kwargs):
         """
-        [updates the respective student data ]
-        args: kwargs[pk]: user id of the user
-        Returns:
-            Response: status , message and data
-            @type: status: Boolean, message:str, data: list
-        """
+               [deletes specific student data ]
+               args: kwargs[pk]: user id of the user
+               Returns:
+                   Response: status , message and data
+                   @type: status: Boolean, message:str, data: list
+               """
         try:
-            if kwargs['role'] == 'student':
-                if kwargs['pk'] == kwargs['userid']:
-                    user = User.objects.get(id=kwargs['userid'])
-                    details = Student.objects.filter(Q(student_id=user.id)).first()
-                    if details is None:
-                        raise LMSException(ExceptionType.UserException,
-                                           "You have not registered your education details.",
-                                           status.HTTP_401_UNAUTHORIZED)
-                    if details.user_id == kwargs['pk']:
-                        data = request.data
-                        serializer = StudentSerializer(details, data=data, partial=True)
-                        if serializer.is_valid():
-                            serializer.save()
-                            data = {'name': user.name, 'email': user.email,
-                                    'phone_number': user.phone_number}
-                            data.update(serializer.data)
-                            data.pop('user')
-                            response = Util.manage_response(status=True, message='data updated successfully',
-                                                            data=data,
-                                                            log='data updated successfully', logger_obj=logger)
-                            return Response(response, status.HTTP_200_OK)
-                        response = Util.manage_response(status=False,
-                                                        message='please enter the valid details',
-                                                        log='please enter the valid details', logger_obj=logger)
-                        return Response(response, status.HTTP_400_BAD_REQUEST)
-                    else:
-                        raise LMSException(ExceptionType.UserException,
-                                           "Sorry,you are not authorized to perform this operation.",
-                                           status.HTTP_401_UNAUTHORIZED)
-                else:
-                    raise LMSException(ExceptionType.UserException,
-                                       "Sorry,you have entered invalid id, please enter your id.",
-                                       status.HTTP_401_UNAUTHORIZED)
+            student_details = Student.objects.filter(Q(id=kwargs['pk'])).first()
+            if student_details is None:
+                raise LMSException(ExceptionType.StudentNotFound, 'No such student found', status.HTTP_400_BAD_REQUEST)
+            if kwargs['role'] == 'admin':
+                student_details.soft_delete()
+                response = Util.manage_response(status=True, message='student details deleted',
+                                                log='student details deleted', logger_obj=logger)
+                return Response(response, status.HTTP_200_OK)
             else:
                 raise LMSException(ExceptionType.UserException,
-                                   "Sorry,you are not student to perform this operation.",
+                                   "Sorry,you are not authorized to perform this operation.",
                                    status.HTTP_401_UNAUTHORIZED)
         except LMSException as e:
             response = Util.manage_response(status=False,
@@ -273,7 +301,7 @@ class StudentDetails(generics.GenericAPIView):
                                             log=str(e), logger_obj=logger)
 
             return Response(response, e.status_code, content_type="application/json")
-        except Student.DoesNotExist:
+        except User.DoesNotExist:
             response = Util.manage_response(status=False,
                                             message='The student does not exist',
                                             log='The student does not exist', logger_obj=logger)
@@ -285,3 +313,5 @@ class StudentDetails(generics.GenericAPIView):
                                             log=str(e), logger_obj=logger)
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
+
+
