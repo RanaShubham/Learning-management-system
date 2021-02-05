@@ -8,5 +8,6 @@ urlpatterns = [
     path('ratings', GetPerformanceInfo.as_view(), name="get_performance_info_all"),
     path('rating', AddPerformanceInfo.as_view(), name="post_performance_info"),
     path('rating/<int:performance_id>', UpdatePerformanceInfo.as_view(), name="update_delete_performance_info"),
-    path('mentor/course', GetStudentCount.as_view(), name="get-student-count")
+    path('mentor', GetStudentCount.as_view(), name="get-student-count"),
+    path('upload-performance', AddPerformanceInfoByFile.as_view(), name="add-performance-by-file")
 ]

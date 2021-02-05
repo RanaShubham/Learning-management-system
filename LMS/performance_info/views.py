@@ -1,7 +1,7 @@
 from LMS.utils import admin_only
 import logging
 import os
-
+import pandas as pd
 from django.db.models import Q
 
 from account.decorators import user_login_required
@@ -16,9 +16,9 @@ from django.utils.decorators import method_decorator
 from LMS.utils import ExceptionType, LMSException
 from rest_framework import generics, permissions, serializers, status
 from rest_framework.response import Response
-
-from .models import PerformanceInfo
-from .serializers import GetPerformanceInfoSerializer, PerformanceInfoSerializer, PerformanceInfoUpdateSerializer
+from rest_framework.parsers import FileUploadParser, MultiPartParser
+from .models import PerformanceInfo, PerformanceFile
+from .serializers import PerformanceInfoSerializer, PerformanceInfoUpdateSerializer, PerformanceFileSerializer
 
 # Create your views here.
 
@@ -279,5 +279,55 @@ class GetStudentCount(generics.GenericAPIView):
             return Response(response, e.status_code, content_type="application/json")
         except Exception as e:
             response = account_utils.manage_response(status=False, message="Something went wrong.Please try again",
+                                                     log=str(e), logger_obj=logger)
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+@method_decorator(user_login_required, name='dispatch')
+class AddPerformanceInfoByFile(generics.GenericAPIView):
+    
+    """
+    Mentor can add .xlsx files to add student performance
+    """
+    parser_classes = (MultiPartParser,)
+    serializer_class = PerformanceFileSerializer
+
+    def post(self, request, **kwargs):
+        """[To upload student performance file by mentor]
+
+        :param kwargs: [mandatory]:[string]requesting user's id generated from decoded token
+        :return:Response with status of success and data if successful.
+        """
+        try:
+            current_user_id = kwargs.get('userid')
+            
+            if kwargs['role'] == 'mentor':
+                current_user_mentor_id = Mentor.objects.get(user = current_user_id).id
+                performance_info = PerformanceInfo.objects.filter(mentor_id=current_user_mentor_id) 
+                print(performance_info)
+            if performance_info is None:
+                raise LMSException(ExceptionType.NonExistentError, "No performance record matching the criteria", status.HTTP_404_NOT_FOUND)
+            instance = PerformanceFile(performance= request.FILES['performance'])
+            instance.save()
+            df = pd.read_excel(instance.performance.path )#index_col=0
+            vals_list = df.to_dict()
+
+            StudentIDs= vals_list.get('StudentId')
+            CourseIDs= vals_list.get('CourseId')
+            CurrentScore= vals_list.get('CurrentScore')
+            AssessmentWeek= vals_list.get('AssessmentWeek')
+            for i in range (len(StudentIDs)):
+                performance_info.filter(student_id=StudentIDs.get(i), course_id=CourseIDs.get(i)).update(score=CurrentScore.get(i), assessment_week=AssessmentWeek.get(i))
+            logger.info('Updated performance record from file.')
+            response = account_utils.manage_response(status=True, message='Updated Student Performance using'+instance.performance.name,
+                                                        log='Retrieved details of students', logger_obj=logger)
+            return Response(response, status=status.HTTP_200_OK)
+        except serializers.ValidationError as e:
+            response = account_utils.manage_response(status=False, message=e.detail, log=e.detail, logger_obj=logger)
+            return Response(response, status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
+        except LMSException as e:
+            response = account_utils.manage_response(status=False, message=e.message, log=e.message, logger_obj=logger)
+            return Response(response, e.status_code, content_type="application/json")
+        except Exception as e:
+            response = account_utils.manage_response(status=False, message=str(e),
                                                      log=str(e), logger_obj=logger)
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
