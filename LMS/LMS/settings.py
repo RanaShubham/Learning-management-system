@@ -87,35 +87,16 @@ AUTHENTICATION_BACKENDS = (
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 #FIXME:
-# DATABASES = {
-#     'default': {
-#         'ENGINE': config('DB_ENGINE'),
-#         'NAME': config('DB_NAME'),
-#         'USER': config('DB_USER'),
-#         'PASSWORD': config('DB_PASSWORD'),
-#         'HOST': config('DB_HOST'),
-#         'POST': '',
-#     }
-# }
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': config('DB_ENGINE'),
-#         'NAME': config('DB_NAME'),
-#         'USER': config('DB_USER'),
-#         'PASSWORD': config('DB_PASSWORD'),
-#         'HOST': config('DB_HOST'),
-#         'POST': '',
-#     }
-# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'dbtest', 
-        'USER': 'admin', 
-        'PASSWORD': 'admin',
-        'HOST': '127.0.0.1', 
-        'PORT': '5433',
+        'ENGINE': config('DB_ENGINE'),
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST'),
+        'POST': '',
     }
 }
 
