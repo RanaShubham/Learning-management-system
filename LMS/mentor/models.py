@@ -24,3 +24,15 @@ class Mentor(models.Model):
             new_id = (str)("{:03d}".format(count + 1))
             self.id = "{}{}".format('MID', new_id)
         super().save(**kwargs)
+
+
+class MentorPost(models.Model):
+    email = models.EmailField(max_length=128, unique=True)
+    name = models.CharField(max_length=32, blank=False, null=False)
+    phone_number = models.CharField(max_length=10, blank=False, null=False)
+    role = models.IntegerField(max_length=10, blank=False, null=False)
+    course = models.ManyToManyField(Course, related_name='post_course')
+    image = models.ImageField(upload_to='profile_images/', default=None, null=True)
+
+    def __str__(self):
+        return self.email

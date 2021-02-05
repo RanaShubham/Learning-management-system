@@ -8,7 +8,7 @@ from account.utils import Util
 from course.models import Course
 from services.logging import loggers
 from .models import Mentor
-from .serializers import MentorSerializer
+from .serializers import MentorSerializer, MentorPostSerializer
 from LMS.utils import ExceptionType, LMSException
 
 logger = loggers("log_mentors.log")
@@ -189,7 +189,7 @@ class MentorProfile(generics.GenericAPIView):
 
 @method_decorator(user_login_required, name='dispatch')
 class CreateMentor(generics.GenericAPIView):
-    serializer_class = MentorSerializer
+    serializer_class = MentorPostSerializer
     queryset = User.objects.all()
 
     def post(self, request, **kwargs):
