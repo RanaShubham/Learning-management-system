@@ -32,7 +32,7 @@ def user_login_required(view_func):
                 HttpResponse.status_code = status.HTTP_401_UNAUTHORIZED
                 return HttpResponse(json.dumps(result), HttpResponse.status_code)
         except jwt.ExpiredSignatureError as e:
-            result = Util.manage_response(status=False, message='Activation has expired.Please generate a new token',
+            result = Util.manage_response(status=False, message='Activation has expired. Please generate a new token',
                                           log=str(e), logger_obj=logger)
             HttpResponse.status_code = status.HTTP_401_UNAUTHORIZED
             return HttpResponse(json.dumps(result), HttpResponse.status_code)

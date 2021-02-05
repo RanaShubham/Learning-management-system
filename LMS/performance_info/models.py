@@ -18,6 +18,8 @@ class PerformanceInfo(models.Model):
     assessment_week = models.IntegerField(default=1, null=True, blank=True)
     is_deleted = models.BooleanField(default=False)
 
+    def __str__(self):
+        return str(self.course_id)+str(self.student_id)
 
     def soft_delete(self):
         self.is_deleted = True
