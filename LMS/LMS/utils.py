@@ -9,7 +9,7 @@ class ExceptionType(enum.Enum):
     StudentExist = "student already exist"
     MentorExists = "mentor already exists"
     PerformanceRecordExists = "Performance record of the student for this course already exiits."
-    
+    NoPerformanceRecord = "Performance record not found."
 
 class LMSException(Exception):
     """[Custom exception.]

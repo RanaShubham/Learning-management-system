@@ -21,7 +21,7 @@ class MentorPostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MentorPost
-        fields = ['email','name', 'phone_number','role','course']
+        fields = ['email','name', 'phone_number','role','course','image']
 
 
 

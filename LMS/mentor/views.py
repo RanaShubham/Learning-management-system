@@ -5,11 +5,12 @@ from django.utils.decorators import method_decorator
 from account.decorators import user_login_required
 from account.serializers import RegisterSerializer
 from account.utils import Util
+from rest_framework.parsers import FileUploadParser,MultiPartParser
 from course.models import Course
 from services.logging import loggers
 from .models import Mentor
 from .serializers import MentorSerializer, MentorPostSerializer
-from LMS.utils import ExceptionType, LMSException
+from LMS.utils import ExceptionType, LMSException, admin_only
 
 logger = loggers("log_mentors.log")
 
@@ -19,6 +20,7 @@ class AdminView(generics.GenericAPIView):
     serializer_class = MentorSerializer
     queryset = User.objects.all()
 
+    @admin_only
     def get(self, request, **kwargs):
         """[displays all mentors' personal details and courses]
             args: kwargs[pk]: user id of the mentor
@@ -27,19 +29,14 @@ class AdminView(generics.GenericAPIView):
                 @type: status: Boolean, message:str, data: list
         """
         try:
-            current_user_id = kwargs.get('userid')
-            if User.objects.get(id=current_user_id).role.__str__() == "admin":
-                mentors = Mentor.objects.all()
-                logger.info('retrieving all existing mentors')
-                serializer = MentorSerializer(mentors, many=True)
-                response = Util.manage_response(status=True,
-                                                message="Retrieved list of mentors", data=serializer.data,
-                                                log="Retrieved list of mentors", logger_obj=logger)
-                return Response(response, status=status.HTTP_200_OK, content_type="application/json")
+            mentors = Mentor.objects.all()
+            logger.info('retrieving all existing mentors')
+            serializer = MentorSerializer(mentors, many=True)
+            response = Util.manage_response(status=True,
+                                            message="Retrieved list of mentors", data=serializer.data,
+                                            log="Retrieved list of mentors", logger_obj=logger)
+            return Response(response, status=status.HTTP_200_OK, content_type="application/json")
 
-            else:
-                raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.",
-                                   status.HTTP_401_UNAUTHORIZED)
 
         except LMSException as e:
             response = Util.manage_response(status=False,
@@ -151,6 +148,7 @@ class MentorProfile(generics.GenericAPIView):
 
             return Response(response, status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
+    @admin_only
     def delete(self, request, **kwargs):
         """[soft deletes mentor profile object for mentor  by taking in id]
 
@@ -158,11 +156,7 @@ class MentorProfile(generics.GenericAPIView):
             :return:deletion confirmation and status code.
         """
         try:
-            current_user_role = kwargs.get('role')
             delete_mentor = User.objects.filter(id=kwargs.get('pk')).exclude(is_deleted=True).first()
-            if current_user_role != 'admin':  # if requesting user isn't admin
-                raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.",
-                                   status.HTTP_401_UNAUTHORIZED)
             if not delete_mentor:  # if user to be deleted isn't in database
                 raise LMSException(ExceptionType.NonExistentError, "No such user record found.",
                                    status.HTTP_404_NOT_FOUND)
@@ -189,9 +183,11 @@ class MentorProfile(generics.GenericAPIView):
 
 @method_decorator(user_login_required, name='dispatch')
 class CreateMentor(generics.GenericAPIView):
+    parser_classes = (MultiPartParser,)
     serializer_class = MentorPostSerializer
     queryset = User.objects.all()
 
+    @admin_only
     def post(self, request, **kwargs):
         """[create mentor profile object for mentor  by taking in course id and user email]
 
@@ -201,10 +197,6 @@ class CreateMentor(generics.GenericAPIView):
         """
 
         try:
-            current_user_role = kwargs.get('role')
-            if current_user_role != 'admin':
-                raise LMSException(ExceptionType.UnauthorizedError, "You are not authorized to perform this operation.",
-                                   status.HTTP_401_UNAUTHORIZED)
             course_list=request.data['course']
             error = []
             valid_list=[]
