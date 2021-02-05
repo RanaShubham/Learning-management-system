@@ -18,7 +18,7 @@ from rest_framework import generics, permissions, serializers, status
 from rest_framework.response import Response
 from rest_framework.parsers import FileUploadParser, MultiPartParser
 from .models import PerformanceInfo, PerformanceFile
-from .serializers import PerformanceInfoSerializer, PerformanceInfoUpdateSerializer, PerformanceFileSerializer
+from .serializers import PerformanceInfoSerializer, PerformanceInfoUpdateSerializer, PerformanceFileSerializer, GetPerformanceInfoSerializer
 
 # Create your views here.
 
@@ -261,19 +261,27 @@ class GetStudentCount(generics.GenericAPIView):
         :return:Response with status of success and data if successful.
         """
         try:
-            if kwargs['role'] == 'admin':
-                performance = PerformanceInfo.objects.filter(mentor_id=request.GET.get('mentor_id')).filter(course_id=request.GET.get('course_id'))
-                if performance is None:
-                    raise LMSException(ExceptionType.NonExistentError, "No performance record matching the criteria", status.HTTP_404_NOT_FOUND)
-                student_list = []
-                for item in performance:
-                    student = Student.objects.filter(id=item.student_id).first()
-                    info = {"name": student.user.name, 'score': item.score}
-                    student_list.append(info)
-                response = account_utils.manage_response(status=True, message='Retrieved details of students.',
-                                                         log='Retrieved details of students', data=student_list,
-                                                         logger_obj=logger)
-                return Response(response, status=status.HTTP_200_OK)
+            # if kwargs['role'] == 'admin':
+            performance = PerformanceInfo.objects.filter(mentor_id=request.GET.get('mentor_id')).filter(
+                course_id=request.GET.get('course_id'))
+            if performance is None:
+                raise LMSException(ExceptionType.NonExistentError, "No performance record matching the criteria",
+                                   status.HTTP_404_NOT_FOUND)
+
+            count = performance.count()
+            performance_obj = PerformanceInfo.objects.filter(mentor_id=request.GET.get('mentor_id')).filter(
+                course_id=request.GET.get('course_id')).first()
+            course_name = performance_obj.course_id.name
+            student_list = []
+            for item in performance:
+                student = Student.objects.filter(id=item.student_id).first()
+                info = {'name': student.user.name, 'score': item.score}
+                student_list.append(info)
+            stud_dict = {'total_students': count, 'course_name': course_name, 'student_info': student_list}
+            response = account_utils.manage_response(status=True, message='Retrieved details of students.',
+                                                     log='Retrieved details of students', data=stud_dict,
+                                                     logger_obj=logger)
+            return Response(response, status=status.HTTP_200_OK)
         except LMSException as e:
             response = account_utils.manage_response(status=False, message=e.message, log=e.message, logger_obj=logger)
             return Response(response, e.status_code, content_type="application/json")
@@ -299,7 +307,7 @@ class AddPerformanceInfoByFile(generics.GenericAPIView):
         """
         try:
             current_user_id = kwargs.get('userid')
-            
+            performance_info = None
             if kwargs['role'] == 'mentor':
                 current_user_mentor_id = Mentor.objects.get(user = current_user_id).id
                 performance_info = PerformanceInfo.objects.filter(mentor_id=current_user_mentor_id) 

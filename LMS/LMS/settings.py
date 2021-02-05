@@ -24,11 +24,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG')
 
 ALLOWED_HOSTS = ['*']
 
 # Application definition
+MODE = config('MODE')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -140,6 +141,14 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'profile_images')
+# STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+#
+# STATICFILES_DIRS = [
+#     os.path.join(BASE_DIR, 'profile_images')
+# ]
+
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'

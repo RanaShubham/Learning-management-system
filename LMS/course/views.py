@@ -1,16 +1,14 @@
-import logging
-import os
-
-from django.shortcuts import render
-
 # Create your views here.
-from drf_yasg.utils import swagger_auto_schema
 
+from django.db.models import Q
+from django.utils.decorators import method_decorator
 from rest_framework import status, generics
-from rest_framework.decorators import api_view, action
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from LMS.utils import LMSException, ExceptionType
+from account.decorators import user_login_required
+from account.models import User, Role
 from account.utils import Util
 from course.models import Course
 from course.serializers import CourseSerializer, CourseGetSerializer
@@ -19,6 +17,10 @@ from django.db.models import Q
 from django.utils.decorators import method_decorator
 from account.decorators import user_login_required
 from services.logging import loggers
+from performance_info.models import PerformanceInfo
+from performance_info.serializers import PerformanceInfoSerializer
+from mentor.models import Mentor
+from mentor.serializers import MentorSerializer
 
 logger = loggers("log_course.log")
 
@@ -216,6 +218,49 @@ class CourseView(generics.GenericAPIView):
                 return Response(response, status.HTTP_204_NO_CONTENT)
             raise LMSException(ExceptionType.NonExistentError, 'Please enter the specific course id',
                                status.HTTP_400_BAD_REQUEST)
+        except LMSException as e:
+            response = Util.manage_response(status=False,
+                                            message=e.message,
+                                            log=e.message, logger_obj=logger)
+            return Response(response, e.status_code, content_type="application/json")
+        except Exception as e:
+            response = Util.manage_response(status=False, message='Something went wrong. Please try again',
+                                            log=str(e), logger_obj=logger)
+            return Response(response, status.HTTP_400_BAD_REQUEST)
+
+
+@method_decorator(user_login_required, name='dispatch')
+class CoursePerformanceDetails(generics.GenericAPIView):
+    """
+    Created a class to get all course details by count of students and mentors associated to a course
+    """
+    def get_serializer_class(self):
+        pass
+
+    def get(self, request, **kwargs):
+        """
+        @param kwargs[userid]: user of id the authorized user
+        @type kwargs: int
+        @param kwargs[role] : role of the logged in person
+        @type: string
+        """
+        try:
+            if kwargs['role'] == 'admin':
+                courses = Course.objects.all()
+                performance = {}
+                for item in courses:
+                    performance_data = PerformanceInfo.objects.filter(course_id=item.id)
+                    mentors = Mentor.objects.filter(course=item.id)
+                    sample = PerformanceInfoSerializer(performance_data, many=True)
+                    mentors_list = MentorSerializer(mentors, many=True)
+                    performance[item.name] = {"mentor_count": mentors_list.data.__len__(),
+                                              "student_count": sample.data.__len__()}
+                response = Util.manage_response(status=True, message='course details retrieved', data=performance,
+                                                log='course details retrieved', logger_obj=logger)
+                return Response(response, status.HTTP_200_OK)
+            else:
+                raise LMSException(ExceptionType.UnauthorizedError, 'you are not authorized to perform this operation',
+                                   status.HTTP_401_UNAUTHORIZED)
         except LMSException as e:
             response = Util.manage_response(status=False,
                                             message=e.message,
